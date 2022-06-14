@@ -1,6 +1,11 @@
+#!/usr/bin/env python3
+"""
+code for SVD, uses data from flowtorch -> of_cylinder2d_binary
+"""
 import torch as pt
 from flowtorch.data import FOAMDataloader, mask_box
 from flowtorch.analysis import SVD
+
 from params import data_save
 
 path = "of_cylinder2D_binary"           #path SVD
@@ -29,12 +34,9 @@ data_matrix -= pt.mean(data_matrix, dim=1).unsqueeze(-1)
 svd = SVD(data_matrix)
 
 modeCoeff = pt.zeros(1)
-modeCoeff = svd.V*svd.s    # Mode coefficients
-minCoeff = modeCoeff.min(dim=0).values
-maxCoeff = modeCoeff.max(dim=0).values
-modeCoeff = (modeCoeff - minCoeff)/(maxCoeff-minCoeff)
+modeCoeff = svd.V#*svd.s    # Mode coefficients
 
 print ("modeCoeff",modeCoeff.shape)
-
+pt.save(svd.s,f"{data_save}svds.pt")
 pt.save(modeCoeff,f"{data_save}modeCoeff.pt")
 pt.save(window_times,f"{data_save}window_times.pt")

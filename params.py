@@ -1,7 +1,7 @@
 import torch as pt
 data_save = "data/"
 
-p_steps = 2           #Anzahl der mitberücksichtigen vorrangegagenen zeitschritte
+p_steps = 0           #Anzahl der mitberücksichtigen vorrangegagenen zeitschritte
 SVD_modes = 10 # first 19 singular values yield 99.12%
 n_inputs = (p_steps + 1) *  SVD_modes
 

@@ -69,12 +69,19 @@ def rearrange_data(data: pt.tensor, steps: int=0):
     """
     input = pt.zeros(len(data)-steps-1, len(data[0])+steps*len(data[0]))       
     output = pt.zeros(len(data)-steps-1, len(data[0]))
+    outputR = pt.zeros(len(data)-steps-1, len(data[0]))
+    outputBW = pt.zeros(len(data)-steps-1, len(data[0]))
     if steps == 0:
         for i in range (len(output)):
             for n in range (0, len(data[0])):
                 input[i, n] = data[i, n]                                         
-                output[i, n] = data[i + steps + 1, n]
-        return input, output
+                output[i, n] = data[i + 1, n]
+                if i != 0 or i != (len(output)):
+                    outputR[i,n] = data[i+1,n]-data[i, n]
+                    outputBW[i,n] = (3*data[i+1,n]-4*data[i,n]+2*data[i-1,n])/2*5e-3
+                else:
+                    outputR[i,n] = outputBW[i,n] = output[i, n]
+        return input, output, outputR, outputBW                                      # outputR and outputBW are missing, p_steps = 0 won't work 
 
     for timestep in range (len(data)-steps-1):                             #loop over all timesteps
         for next_timestep in range (0,steps):                               #add next timesteps to first step
@@ -87,7 +94,12 @@ def rearrange_data(data: pt.tensor, steps: int=0):
     for i in range (len(output)):
         for n in range (0, len(data[0])):
             output[i, n] = data[i + steps +1, n]
-    return input, output
+            if i != 0 or i != (len(output)):
+                outputR[i,n] = data[i+1,n]-data[i, n]
+                outputBW[i,n] = (3*data[i+1,n]-4*data[i,n]+2*data[i-1,n])/2*5e-3
+            else:
+                outputR[i,n] = outputBW[i,n] = output[i, n]
+    return input, output, outputR, outputBW
 
 def split_data(data_in: pt.tensor, timesteps_out: int, modes_out: int, timesteps_skip: int = 0):
     """Return timesteps for the number of modes given. 

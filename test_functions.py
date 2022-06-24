@@ -1,5 +1,7 @@
+from numpy import rec
 import torch as pt
-from functions import rearrange_data, split_data, subtract_data
+from functions import rearrange_data, split_data, recalculate_output
+from params import SVD_modes
 def test_rearrange_data():
     data =pt.tensor([[1, 2],[3, 4],[5, 6],[7, 8]])
 
@@ -28,9 +30,19 @@ def test_split_data():
 
     assert pt.max(data_check - data_vgl) == 0
 
-def test_subtract_data():
-    data = pt.tensor([[1, 2, 3],[4,5,6],[7,8,9],[10,11,12],[13,14,15],[16,17,18],[19,20,21]])
-    data_check = pt.tensor([[3, 3, 3],[3, 3, 3],[3, 3, 3],[3, 3, 3],[3, 3, 3],[3, 3, 3]])
-    data_vgl = subtract_data(data)
+def test_recalculate_output():
+    data = pt.tensor([[1, 2, 3],[7,8,9],[4,5,6],[10,11,12],[16,17,18],[13,14,15],[19,20,21]])
+    input_data = pt.tensor([[1,2,3,7,8,9],[4,5,6,10,11,12],[16,17,18,13,14,15]])
 
-    assert pt.max(data_check - data_vgl) == 0
+    data_check = pt.tensor([[1, 2, 3],[7,8,9],[4,5,6],[10,11,12],[16,17,18],[13,14,15]])
+    data_vgl = recalculate_output(input_data,data,"sequential")
+    assert pt.max((data_check - data_vgl)**2) == 0
+
+    data_check = pt.tensor([[-6,-6,-6],[6,6,6],[-3,-3,-3],[6,6,6],[6,6,6],[-3,-3,-3]])
+    data_vgl = recalculate_output(input_data,data,"residual")
+    assert pt.max((data_check - data_vgl)**2) == 0
+
+    data_check = pt.tensor([[2400,2400,2400],[-1500,-1500,-1500],[2100,2100,2100],[1200,1200,1200],[-1500,-1500,-1500],[2100,2100,2100]])
+    data_vgl = recalculate_output(input_data,data,"backward")
+
+    assert pt.max((data_check - data_vgl)**2) == 0

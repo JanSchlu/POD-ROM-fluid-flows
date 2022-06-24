@@ -1,6 +1,17 @@
-from dataclasses import dataclass
+from turtle import forward
 import torch as pt
 from os.path import isdir
+
+from params import SVD_modes, p_steps
+
+class testNN(pt.nn.Module):
+    def __init__(self, labels):
+        super().__init__()
+        self.labels = labels
+    def forward(self, x):
+        return self.labels(x)
+
+
 
 
 class FirstNN(pt.nn.Module):
@@ -15,7 +26,7 @@ class FirstNN(pt.nn.Module):
         self.activation = kwargs.get("activation", pt.sigmoid)
         self.layers = pt.nn.ModuleList()
         # input layer to first hidden layer
-        self.layers.append(pt.nn.Linear(self.n_inputs, self.n_neurons, bias=False))
+        self.layers.append(pt.nn.Linear(self.n_inputs, self.n_neurons, bias=True))#False))
         # add more hidden layers if specified
         if self.n_layers > 1:
             for hidden in range(self.n_layers-1):
@@ -43,12 +54,14 @@ def optimize_model(model: pt.nn.Module, input_train: pt.Tensor, output_train: pt
  
     criterion = pt.nn.MSELoss()
     optimizer = pt.optim.Adam(params=model.parameters(), lr=lr)
-    best_val_loss, best_train_loss = 1.0e5, 1.0e5
-    train_loss, val_loss = [], []
+    best_train_loss = 1.0e5
+    train_loss = []
     for e in range(1, epochs+1):
         optimizer.zero_grad()
-        prediction =  model(input_train).squeeze()                  # x_train ein Zeitschrit
+      #  print(input_train.shape)
+        prediction =  model(input_train)#.squeeze()                  # x_train ein Zeitschrit
         loss = criterion(prediction, output_train)	# y_train ist der nächste Zeitschritt
+      #  print(prediction.shape, output_train.shape, input_train.shape)
         loss.backward()
         optimizer.step()
         train_loss.append(loss.item())
@@ -67,21 +80,18 @@ def rearrange_data(data: pt.tensor, steps: int=0):
     The number of predictiable timesteps is always one timestep less than the input timesteps.
      
     """
-    input = pt.zeros(len(data)-steps-1, len(data[0])+steps*len(data[0]))       
-    output = pt.zeros(len(data)-steps-1, len(data[0]))
-    outputR = pt.zeros(len(data)-steps-1, len(data[0]))
-    outputBW = pt.zeros(len(data)-steps-1, len(data[0]))
+    if data.dim() == 1:
+        input = pt.zeros(data.size(dim=0)-steps-1)
+        output = pt.zeros(len(data)-steps-1)
+    else:
+        input = pt.zeros(data.size(dim=0)-steps-1, data.size(dim=1)+steps*data.size(dim=1))
+        output = pt.zeros(len(data)-steps-1, data.size(dim=1))
     if steps == 0:
         for i in range (len(output)):
-            for n in range (0, len(data[0])):
-                input[i, n] = data[i, n]                                         
-                output[i, n] = data[i + 1, n]
-                if i != 0 or i != (len(output)):
-                    outputR[i,n] = data[i+1,n]-data[i, n]
-                    outputBW[i,n] = (3*data[i+1,n]-4*data[i,n]+2*data[i-1,n])/2*5e-3
-                else:
-                    outputR[i,n] = outputBW[i,n] = output[i, n]
-        return input, output, outputR, outputBW                                      # outputR and outputBW are missing, p_steps = 0 won't work 
+                input[i] = data[i]                                         
+                output[i] = data[i + 1]
+   
+        return input, output                              
 
     for timestep in range (len(data)-steps-1):                             #loop over all timesteps
         for next_timestep in range (0,steps):                               #add next timesteps to first step
@@ -92,15 +102,31 @@ def rearrange_data(data: pt.tensor, steps: int=0):
         input[timestep]= y
 
     for i in range (len(output)):
-        for n in range (0, len(data[0])):
-            output[i, n] = data[i + steps +1, n]
-            if i != 0 or i != (len(output)):
-                outputR[i,n] = data[i+1,n]-data[i, n]
-                outputBW[i,n] = (3*data[i+1,n]-4*data[i,n]+2*data[i-1,n])/2*5e-3
-            else:
-                outputR[i,n] = outputBW[i,n] = output[i, n]
-    return input, output, outputR, outputBW
+        output[i] = data[i + steps +1]
+          
+    return input, output
 
+
+def recalculate_output(input_data,output_data, string):
+    lastStepBegin= SVD_modes*p_steps                            # auf 3 stellen für pytest
+    if string == "sequential":
+        return output_data[:-1]
+    if string == "residual":
+        outputR = pt.zeros(len(output_data)-1, len(output_data[0]))
+        outputR[0] = output_data[0]-input_data[0,lastStepBegin:]
+        for i in range (1,len(outputR)):
+            outputR[i] = output_data[i]-output_data[i-1] 
+        return outputR
+    if string == "backward":
+        outputBW = pt.zeros(len(output_data)-1, len(output_data[0]))
+        outputBW[0] = (3*output_data[1] - 4*output_data[0] + input_data[0,lastStepBegin:])/(2*5e-3)
+        for i in range (1,len(outputBW)):
+            outputBW[i] = (3*output_data[i+1] - 4*output_data[i] + output_data[i-1])/(2*5e-3)
+        return outputBW
+
+
+
+        
 def split_data(data_in: pt.tensor, timesteps_out: int, modes_out: int, timesteps_skip: int = 0):
     """Return timesteps for the number of modes given. 
 

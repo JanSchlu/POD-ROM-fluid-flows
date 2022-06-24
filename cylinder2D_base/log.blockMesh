@@ -1,0 +1,142 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  8
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+Build  : 8-1c9b5879390b
+Exec   : blockMesh
+Date   : Jun 24 2022
+Time   : 11:33:57
+Host   : "jan-desktop"
+PID    : 19467
+I/O    : uncollated
+Case   : /home/jan/POD-ROM-fluid-flows/cylinder2D_base
+nProcs : 1
+sigFpe : Enabling floating point exception trapping (FOAM_SIGFPE).
+fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 10)
+allowSystemOperations : Allowing user-supplied system call operations
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Create time
+
+Creating block mesh from
+    "system/blockMeshDict"
+Using #calcEntry at line 22 in file "/home/jan/POD-ROM-fluid-flows/cylinder2D_base/system/blockMeshDict"
+Using #codeStream with "/home/jan/POD-ROM-fluid-flows/cylinder2D_base/dynamicCode/platforms/linux64GccDPInt32Opt/lib/libcodeStream_63f900e4e59767b7622220215dcab8cc90a2fb6d.so"
+Creating new library in "dynamicCode/_63f900e4e59767b7622220215dcab8cc90a2fb6d/platforms/linux64GccDPInt32Opt/lib/libcodeStream_63f900e4e59767b7622220215dcab8cc90a2fb6d.so"
+Invoking "wmake -s libso /home/jan/POD-ROM-fluid-flows/cylinder2D_base/dynamicCode/_63f900e4e59767b7622220215dcab8cc90a2fb6d"
+wmake libso /home/jan/POD-ROM-fluid-flows/cylinder2D_base/dynamicCode/_63f900e4e59767b7622220215dcab8cc90a2fb6d
+    ln: ./lnInclude
+    wmkdep: codeStreamTemplate.C
+    Ctoo: codeStreamTemplate.C
+    ld: /home/jan/POD-ROM-fluid-flows/cylinder2D_base/dynamicCode/_63f900e4e59767b7622220215dcab8cc90a2fb6d/../platforms/linux64GccDPInt32Opt/lib/libcodeStream_63f900e4e59767b7622220215dcab8cc90a2fb6d.so
+Using #calcEntry at line 24 in file "/home/jan/POD-ROM-fluid-flows/cylinder2D_base/system/blockMeshDict"
+Using #codeStream with "/home/jan/POD-ROM-fluid-flows/cylinder2D_base/dynamicCode/platforms/linux64GccDPInt32Opt/lib/libcodeStream_75e9c1e7b6158c71151ceea76aec1a351d67bb9f.so"
+Creating new library in "dynamicCode/_75e9c1e7b6158c71151ceea76aec1a351d67bb9f/platforms/linux64GccDPInt32Opt/lib/libcodeStream_75e9c1e7b6158c71151ceea76aec1a351d67bb9f.so"
+Invoking "wmake -s libso /home/jan/POD-ROM-fluid-flows/cylinder2D_base/dynamicCode/_75e9c1e7b6158c71151ceea76aec1a351d67bb9f"
+wmake libso /home/jan/POD-ROM-fluid-flows/cylinder2D_base/dynamicCode/_75e9c1e7b6158c71151ceea76aec1a351d67bb9f
+    ln: ./lnInclude
+    wmkdep: codeStreamTemplate.C
+    Ctoo: codeStreamTemplate.C
+    ld: /home/jan/POD-ROM-fluid-flows/cylinder2D_base/dynamicCode/_75e9c1e7b6158c71151ceea76aec1a351d67bb9f/../platforms/linux64GccDPInt32Opt/lib/libcodeStream_75e9c1e7b6158c71151ceea76aec1a351d67bb9f.so
+Using #codeStream at line 31 in file "/home/jan/POD-ROM-fluid-flows/cylinder2D_base/system/blockMeshDict"
+Using #codeStream with "/home/jan/POD-ROM-fluid-flows/cylinder2D_base/dynamicCode/platforms/linux64GccDPInt32Opt/lib/libcodeStream_b202be407f5a8559bd7f5d646e38dc44035a7919.so"
+Creating new library in "dynamicCode/_b202be407f5a8559bd7f5d646e38dc44035a7919/platforms/linux64GccDPInt32Opt/lib/libcodeStream_b202be407f5a8559bd7f5d646e38dc44035a7919.so"
+Invoking "wmake -s libso /home/jan/POD-ROM-fluid-flows/cylinder2D_base/dynamicCode/_b202be407f5a8559bd7f5d646e38dc44035a7919"
+wmake libso /home/jan/POD-ROM-fluid-flows/cylinder2D_base/dynamicCode/_b202be407f5a8559bd7f5d646e38dc44035a7919
+    ln: ./lnInclude
+    wmkdep: codeStreamTemplate.C
+    Ctoo: codeStreamTemplate.C
+    ld: /home/jan/POD-ROM-fluid-flows/cylinder2D_base/dynamicCode/_b202be407f5a8559bd7f5d646e38dc44035a7919/../platforms/linux64GccDPInt32Opt/lib/libcodeStream_b202be407f5a8559bd7f5d646e38dc44035a7919.so
+Using #calcEntry at line 77 in file "/home/jan/POD-ROM-fluid-flows/cylinder2D_base/system/blockMeshDict"
+Using #codeStream with "/home/jan/POD-ROM-fluid-flows/cylinder2D_base/dynamicCode/platforms/linux64GccDPInt32Opt/lib/libcodeStream_0f19253e67a75197f9f64b593bbdb4933f157d70.so"
+Creating new library in "dynamicCode/_0f19253e67a75197f9f64b593bbdb4933f157d70/platforms/linux64GccDPInt32Opt/lib/libcodeStream_0f19253e67a75197f9f64b593bbdb4933f157d70.so"
+Invoking "wmake -s libso /home/jan/POD-ROM-fluid-flows/cylinder2D_base/dynamicCode/_0f19253e67a75197f9f64b593bbdb4933f157d70"
+wmake libso /home/jan/POD-ROM-fluid-flows/cylinder2D_base/dynamicCode/_0f19253e67a75197f9f64b593bbdb4933f157d70
+    ln: ./lnInclude
+    wmkdep: codeStreamTemplate.C
+    Ctoo: codeStreamTemplate.C
+    ld: /home/jan/POD-ROM-fluid-flows/cylinder2D_base/dynamicCode/_0f19253e67a75197f9f64b593bbdb4933f157d70/../platforms/linux64GccDPInt32Opt/lib/libcodeStream_0f19253e67a75197f9f64b593bbdb4933f157d70.so
+Using #calcEntry at line 78 in file "/home/jan/POD-ROM-fluid-flows/cylinder2D_base/system/blockMeshDict"
+Using #codeStream with "/home/jan/POD-ROM-fluid-flows/cylinder2D_base/dynamicCode/platforms/linux64GccDPInt32Opt/lib/libcodeStream_4686b52cd78f13f8a36c9f6fe31a546a3f44507c.so"
+Creating new library in "dynamicCode/_4686b52cd78f13f8a36c9f6fe31a546a3f44507c/platforms/linux64GccDPInt32Opt/lib/libcodeStream_4686b52cd78f13f8a36c9f6fe31a546a3f44507c.so"
+Invoking "wmake -s libso /home/jan/POD-ROM-fluid-flows/cylinder2D_base/dynamicCode/_4686b52cd78f13f8a36c9f6fe31a546a3f44507c"
+wmake libso /home/jan/POD-ROM-fluid-flows/cylinder2D_base/dynamicCode/_4686b52cd78f13f8a36c9f6fe31a546a3f44507c
+    ln: ./lnInclude
+    wmkdep: codeStreamTemplate.C
+    Ctoo: codeStreamTemplate.C
+    ld: /home/jan/POD-ROM-fluid-flows/cylinder2D_base/dynamicCode/_4686b52cd78f13f8a36c9f6fe31a546a3f44507c/../platforms/linux64GccDPInt32Opt/lib/libcodeStream_4686b52cd78f13f8a36c9f6fe31a546a3f44507c.so
+Using #calcEntry at line 79 in file "/home/jan/POD-ROM-fluid-flows/cylinder2D_base/system/blockMeshDict"
+Using #calcEntry at line 80 in file "/home/jan/POD-ROM-fluid-flows/cylinder2D_base/system/blockMeshDict"
+Using #calcEntry at line 81 in file "/home/jan/POD-ROM-fluid-flows/cylinder2D_base/system/blockMeshDict"
+Using #calcEntry at line 82 in file "/home/jan/POD-ROM-fluid-flows/cylinder2D_base/system/blockMeshDict"
+Using #calcEntry at line 83 in file "/home/jan/POD-ROM-fluid-flows/cylinder2D_base/system/blockMeshDict"
+Using #calcEntry at line 84 in file "/home/jan/POD-ROM-fluid-flows/cylinder2D_base/system/blockMeshDict"
+Creating block edges
+No non-planar block faces defined
+Creating topology blocks
+Creating topology patches
+
+Creating block mesh topology
+
+Check topology
+
+	Basic statistics
+		Number of internal faces : 5
+		Number of boundary faces : 20
+		Number of defined boundary faces : 20
+		Number of undefined boundary faces : 0
+	Checking patch -> block consistency
+
+Creating block offsets
+Creating merge list .
+
+Creating polyMesh from blockMesh
+Creating patches
+Creating cells
+Creating points with scale 1
+    Block 0 cell size :
+        i : 0.004 .. 0.004 0.0039523338 .. 0.0039523338 0.004 .. 0.004 0.0039523338 .. 0.0039523338 
+        j : 0.0032265907 .. 0.0016132953 0.0031876073 .. 0.0015938037 0.0032265907 .. 0.0016132953 0.0031876073 .. 0.0015938037 
+        k : 0.01
+    Block 1 cell size :
+        i : 0.0041 .. 0.0041 0.0040509479 .. 0.0040509479 0.0041 .. 0.0041 0.0040509479 .. 0.0040509479 
+        j : 0.0032265907 .. 0.0016132953 0.0031866363 .. 0.0015933182 0.0032265907 .. 0.0016132953 0.0031866363 .. 0.0015933182 
+        k : 0.01
+    Block 2 cell size :
+        i : 0.004 .. 0.004 0.0039523338 .. 0.0039523338 0.004 .. 0.004 0.0039523338 .. 0.0039523338 
+        j : 0.0033260209 .. 0.0016630104 0.0032878947 .. 0.0016439474 0.0033260209 .. 0.0016630104 0.0032878947 .. 0.0016439474 
+        k : 0.01
+    Block 3 cell size :
+        i : 0.0041 .. 0.0041 0.0040509479 .. 0.0040509479 0.0041 .. 0.0041 0.0040509479 .. 0.0040509479 
+        j : 0.0033260209 .. 0.0016630104 0.0032852065 .. 0.0016426033 0.0033260209 .. 0.0016630104 0.0032852065 .. 0.0016426033 
+        k : 0.01
+    Block 4 cell size :
+        i : 0.0018477536 .. 0.0073910142
+        j : 0.0041 .. 0.0041
+        k : 0.01
+
+Writing polyMesh
+----------------
+Mesh Information
+----------------
+  boundingBox: (0 0 0) (2.2 0.41 0.01)
+  nPoints: 171700
+  nCells: 85000
+  nFaces: 340850
+  nInternalFaces: 169150
+----------------
+Patches
+----------------
+  patch 0 (start: 169150 size: 550) name: top
+  patch 1 (start: 169700 size: 550) name: bottom
+  patch 2 (start: 170250 size: 100) name: inlet
+  patch 3 (start: 170350 size: 100) name: outlet
+  patch 4 (start: 170450 size: 85000) name: back
+  patch 5 (start: 255450 size: 85000) name: front
+  patch 6 (start: 340450 size: 400) name: cylinder
+
+End
+

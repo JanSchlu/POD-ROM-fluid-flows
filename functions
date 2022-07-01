@@ -3,7 +3,7 @@
 # with small modifications to run with Singularity
 
 image="../../of2106.sif"
-bashrc="/usr/lib/openfoam/openfoam2012/etc/bashrc"
+bashrc="/usr/lib/openfoam/openfoam2106/etc/bashrc"
 
 imageFound()
 {

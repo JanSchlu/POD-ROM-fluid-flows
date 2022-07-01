@@ -3,8 +3,8 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
-data/
-of_cylinder2D_binary/
+run/
+of2106.sif
 
 # User-specific files
 *.rsuser

@@ -45,7 +45,10 @@ for Re in range(len(Re_samples)):
 ## singularity image globaly not available
 ## functions file globaly not available
 ## change simulated time and timestepsize in /system/controlDict
-# deltaT_max = 0.006 for Re400 -> CFD=1 
+# deltaT_max = 0.006 for Re400 -> CFL=1 
+# CFL Zahl konst halten, Zeitschritt an Re anpassen
+# Ausgabe Zeitschritt konstant halten
+# Orientierung an Fabians Bachelor Arbeit für die Frequenz/Strohalzahl über Re
 # OpenFoam Version for /cylinder2D_base is v1912 -> used version is v2106 -> require some changes -> wrong version used, use singularity
 
 ## Wie viele Pkte pro Schwingung braucht das Netz zur korrekten Wiedergabe des zeitlichen Verlaufs?

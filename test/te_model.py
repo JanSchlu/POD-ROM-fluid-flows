@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 import torch as pt
 from functions import *
 from params import SVD_modes
-
+from test_functions import predictor_backward, predictor_residual, predictor_sequential
 train_loss = pt.zeros(10000)
 
 plt_save = "/home/jan/POD-ROM-fluid-flows/run/plot/"
@@ -35,35 +35,9 @@ y_trainBW = recalculate_output(train_data,y_train,"backward")
 y_train = recalculate_output(train_data,y_train,"sequential")
 train_data=train_data[:-1]
 
-
-#modelR = testNN(y_trainR)
-#modelBW = testNN(y_trainBW)
-
-
-p_steps =0
-SVD_modes = 1
-def predictor(data, prediction_update):
-    predict = pt.ones([len(test_data)-1-p_steps,SVD_modes])                                           # pred len(test_data)-1-p_steps
-    for i in range (0, len(predict)):
-        if prediction_update == "sequential":
-            predict[i] = data[i+1]
-        if prediction_update == "residual":
-            predict[0]= data[1]
-            if i>0:
-                predict[i] = data[i] + 0.01#modelR(data[i])
-        if prediction_update == "backward":
-            predict[0]=data[1]
-            predict[1]=data[2]
-            if i>1:
-                predict[i] = 4/3*data[i] - 1/3*data[i-1] + 2/3*0.01*5e-3
-    predict = predict.detach().numpy()
-    return predict
-
-predS = predictor(test_data, "sequential")    
-predR = predictor(test_data, "residual")
-predBW = predictor(test_data, "backward")
-print("predR",predR)
-
+predS = predictor_sequential(test_data)    
+predR = predictor_residual(test_data)
+predBW = predictor_backward(test_data)
 #######################################################################################
 # error plot
 #######################################################################################
@@ -71,31 +45,17 @@ print("predR",predR)
 err = pt.zeros(len(y_test))
 fig, ax = plt.subplots()
 
-err = (y_test-predS)#**2
-meanErr = pt.sum(err,1)/SVD_modes
-err = err.detach().numpy()
+err = (y_test-predS)**2
+meanErr = pt.sum(err,1)/SVD_modes 
 meanErr = meanErr.detach().numpy()
 
-errR = (y_test-predR)#**2
-meanErrR = pt.sum(errR,1)/SVD_modes
-errR = errR.detach().numpy()
+errR = (y_test-predR)**2
+meanErrR = pt.sum(errR,1)/SVD_modes 
 meanErrR = meanErrR.detach().numpy()
 
-errBW = (y_test-predBW)#**2
-meanErrbw = pt.sum(errBW,1)/SVD_modes
-errBW = errBW.detach().numpy()
+errBW = (y_test-predBW)**2
+meanErrbw = pt.sum(errBW,1)/SVD_modes 
 meanErrbw = meanErrbw.detach().numpy()
-
-
-plt.plot(range(0 , len(y_test)), err[:], 'g', lw=1, label="MSE Error S")
-plt.plot(range(0 , len(y_test)), errR[:], 'g:', lw=1, label="MSE Error R")
-plt.plot(range(0 , len(y_test)), errBW[:], 'g--', lw=1, label="MSE Error BW")
-
-#plt.yscale("log")
-#plt.ylim(bottom=10e-10)
-plt.xlim(0, len(y_test))
-plt.legend()
-plt.savefig(f"{plt_save}errortest.png")
 
 #######################################################################################
 # plot mean error plot
@@ -109,7 +69,7 @@ plt.plot(range(0, len(y_test)), meanErrbw, 'g--', lw=1.0, label="prediction erro
 plt.xlim(0, len(y_test))
 plt.xlabel("preditected timesteps")
 plt.ylabel("mean error")
-plt.yscale("log")
+#plt.yscale("log")
 plt.legend()
 plt.savefig(f"{plt_save}meanErrortest.png")
 

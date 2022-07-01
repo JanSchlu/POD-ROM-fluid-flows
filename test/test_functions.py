@@ -46,3 +46,30 @@ def test_recalculate_output():
     data_vgl = recalculate_output(input_data,data,"backward")
 
     assert pt.max((data_check - data_vgl)**2) == 0
+
+
+def predictor_sequential(data):
+    predict = pt.ones([len(data)-1,1])                                           # pred len(test_data)-1-p_steps
+    for i in range (0, len(predict)):
+        predict[i] = data[i+1]
+    predict = predict.detach().numpy()
+    return predict
+
+def predictor_residual(data):
+    predict = pt.ones([len(data)-1,1])                                           # pred len(test_data)-1-p_steps
+    for i in range (0, len(predict)):
+        predict[0] = data[1]
+        if i>0:
+            predict[i] = data[i] + 0.01 # modelR(data[i])
+    predict = predict.detach().numpy()
+    return predict
+
+def predictor_backward(data):
+    predict = pt.ones([len(data)-1,1])                                           # pred len(test_data)-1-p_steps
+    for i in range (0, len(predict)):
+        predict[0] = data[1]
+        predict[1] = data[2]
+        if i>1:
+            predict[i] = 4/3*data[i] - 1/3*data[i-1] + 2/3*0.01*1
+    predict = predict.detach().numpy()
+    return predict

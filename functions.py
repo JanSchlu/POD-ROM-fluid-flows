@@ -107,22 +107,23 @@ def rearrange_data(data: pt.tensor, steps: int=0):
     return input, output
 
 
-def recalculate_output(input_data,output_data, string):
+def recalculate_output(input_data,output_data, string, deltaT):
     lastStepBegin= SVD_modes*p_steps                            # auf 3 stellen für pytest
+    output = pt.zeros(len(output_data)-1, len(output_data[0]))
     if string == "sequential":
+        for i in range (1,len(output)):
+            print (output_data[i][0])
         return output_data[:-1]
     if string == "residual":
-        outputR = pt.zeros(len(output_data)-1, len(output_data[0]))
-        outputR[0] = output_data[0]-input_data[0,lastStepBegin:]
-        for i in range (1,len(outputR)):
-            outputR[i] = output_data[i]-output_data[i-1] 
-        return outputR
+        output[0] = output_data[0]-input_data[0,lastStepBegin:]
+        for i in range (1,len(output)):
+            output[i] = output_data[i]-output_data[i-1]
+        return output
     if string == "backward":
-        outputBW = pt.zeros(len(output_data)-1, len(output_data[0]))
-        outputBW[0] = (3*output_data[1] - 4*output_data[0] + input_data[0,lastStepBegin:])/(2*5e-3)
-        for i in range (1,len(outputBW)):
-            outputBW[i] = (3*output_data[i+1] - 4*output_data[i] + output_data[i-1])/(2*5e-3)
-        return outputBW
+        output[0] = (3*output_data[1] - 4*output_data[0] + input_data[0,lastStepBegin:])/(2*deltaT)
+        for i in range (1,len(output)):
+            output[i] = (3*output_data[i+1] - 4*output_data[i] + output_data[i-1])/(2*deltaT)
+        return output
 
 
 
@@ -138,3 +139,102 @@ def split_data(data_in: pt.tensor, timesteps_out: int, modes_out: int, timesteps
         for n in range (0,modes_out):
             data_out[i , n] = data_in[i + timesteps_skip, n]
     return data_out
+
+
+
+def predictor_sequential(model, data):
+    predict = pt.ones([len(data)-p_steps-1,SVD_modes])                                           # pred len(test_data)-1-p_steps
+    for i in range (0, len(predict)):
+        predict[i] = model(data[i]).squeeze()               # model predict data[i+1]
+    predict = predict.detach().numpy()
+    return predict
+
+def predictor_residual(model, data):
+    predict = pt.ones([len(data)-p_steps-1,SVD_modes])                                         # pred len(test_data)-1-p_steps
+    for i in range (0, len(predict)):
+        predict[0] = data[1]
+        if i>0:
+            predict[i] = data[i-1,p_steps * 20:] + model(data[i]).squeeze()
+    predict = predict.detach().numpy()
+    return predict
+
+def predictor_backward(model, data):
+    predict = pt.ones([len(data)-p_steps-1,SVD_modes])                                         # pred len(test_data)-1-p_steps
+    for i in range (0, len(predict)):
+        predict[0] = data[1]
+        predict[1] = data[2]
+        if i>1:
+            predict[i] = 4/3*predict[i-1] - 1/3*predict[i-2] + 2/3*model(data[i]).squeeze()*5e-3 # 5e-3 is timestepssize
+    predict = predict.detach().numpy()
+    return predict
+
+
+def predictor_sequential_period(model, data):
+    predStore = pt.ones([len(data)-p_steps,SVD_modes+SVD_modes*p_steps])                 
+    predicted = pt.ones([len(data)-p_steps-1,SVD_modes])
+    predStore[0] = data[0]                                                               #start is last timestep of trainData
+    predicted[0] = data[0, SVD_modes*p_steps:]
+    for i in range (1, len(predStore)):
+        prediction = model(predStore[i-1]).squeeze()
+        predStore[i] = pt.cat((predStore[i-1,SVD_modes:], prediction))
+        predicted[i-1] = prediction 
+    predicted = predicted.detach().numpy()
+    return predicted
+
+def predictor_residual_period(model, data):
+    predStore = pt.ones([len(data)-p_steps,SVD_modes+SVD_modes*p_steps])                 
+    predicted = pt.ones([len(data)-p_steps-1,SVD_modes])
+    predStore[0] = data[0]                                                               #start is last timestep of trainData
+    predicted[0] = data[0, SVD_modes*p_steps:]
+    for i in range (1, len(predStore)):
+        prediction = predStore[i-1,p_steps*20:]+model(predStore[i-1]).squeeze()
+        predStore[i] = pt.cat((predStore[i-1,SVD_modes:], prediction))
+        predicted[i-1] = prediction 
+    predicted = predicted.detach().numpy()
+    return predicted
+    
+def predictor_backward_period(model, data):
+    predStore = pt.ones([len(data)-p_steps,SVD_modes+SVD_modes*p_steps])                 
+    predicted = pt.ones([len(data)-p_steps-1,SVD_modes])
+    predStore[0] = data[0]                                                               #start is last timestep of trainData
+    predicted[0] = data[0, SVD_modes*p_steps:]
+
+    predict = pt.ones([len(data)-p_steps,SVD_modes])                                         # pred len(test_data)-1-p_steps
+    for i in range (0, len(predict)):
+        predict[0] = data[1]
+        predict[1] = data[2]
+        if i>1:
+            predict[i] = 4/3*predict[i-1] - 1/3*predict[i-2] + 2/3*model(data[i]).squeeze()*5e-3 # 5e-3 is timestepssize
+    predict = predict.detach().numpy()
+    
+    for i in range (1, len(predStore)):
+        prediction = 4/3*predStore[i-1,p_steps*20:] - 1/3*predStore[i-1,p_steps*10:p_steps*10+10] + 2/3*model(predStore[i-1]).squeeze()*5e-3
+        predStore[i] = pt.cat((predStore[i-1,SVD_modes:], prediction))
+        predicted[i-1] = prediction 
+    predicted = predicted.detach().numpy()
+    return predicted
+
+
+def preditorOfPredicted(data, scheme):
+    predStore = pt.ones([len(data)-p_steps,SVD_modes+SVD_modes*p_steps])                 
+    predicted = pt.ones([len(data)-p_steps,SVD_modes])
+    predStore[0] = data[0]                                                               #start is last timestep of trainData
+    predicted[0] = data[0, SVD_modes*p_steps:]
+    for i in range (1, len(predStore)):
+        if scheme == "sequential":
+            prediction = best_model(predStore[i-1]).squeeze()
+        if scheme == "residual":
+            prediction = predStore[i-1,p_steps*20:]+best_modelR(predStore[i-1]).squeeze()
+        if scheme == "backward":
+            prediction = 4/3*predStore[i-1,p_steps*20:] - 1/3*predStore[i-1,p_steps*10:p_steps*10+10] + 2/3*best_modelBW(predStore[i-1]).squeeze()*5e-3
+        predStore[i] = pt.cat((predStore[i-1,SVD_modes:], prediction))
+        predicted[i-1] = prediction 
+    predicted = predicted.detach().numpy()
+    return predicted
+
+
+
+
+    # -> TEST:  mit mehr SVD modes
+    # -> TEST:  mit Fehlerpfortpflazung
+    # -> TEST:  mit richtigen Daten

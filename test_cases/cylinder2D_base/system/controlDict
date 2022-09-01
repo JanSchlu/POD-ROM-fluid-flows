@@ -48,3 +48,11 @@ timeFormat      general;
 timePrecision   4;
 
 runTimeModifiable false;
+
+functions
+{
+    #include "FOvorticity"
+    //#include "FOWriteCellVolumes"
+    //#include "FOWriteCellCentres"   
+}
+// ************************************************************************* //

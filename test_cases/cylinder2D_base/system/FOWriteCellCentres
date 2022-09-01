@@ -1,0 +1,6 @@
+writeCellVolumes1
+    {
+        // Mandatory entries (unmodifiable)
+        type            writeCellVolumes;
+        libs            (fieldFunctionObjects);
+    }

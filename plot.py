@@ -9,6 +9,9 @@ from functions import *
 from params import data_save, SVD_modes
 
 
+# increase plot resolution
+plt.rcParams["figure.dpi"] = 500
+
 plt_save = "/home/jan/POD-ROM-fluid-flows/run/plot/"
 lenTrain = pt.load(f"{data_save}lenTrain.pt")                                                       
 lenTest = pt.load(f"{data_save}lenTest.pt")
@@ -48,18 +51,18 @@ plt.savefig(f"{plt_save}loss.png")
 #######################################################################################
 # plot prediciton mode
 #######################################################################################
-
+print(y_test.shape)
+print(predS.shape)
+print(predR.shape)
+print(predBW.shape)
 fig, axarr = plt.subplots(2, 2, sharex=True, sharey=True)
 count = 0
 for row in range(2):
     for col in range(2):
-        axarr[row, col].plot(range(0 , len(y_test)), y_test[:,count], 'b', lw=0.5, label=f"coeff. mode {count+1}")
-        axarr[row, col].plot(range(0 , len(y_test)), predS[:,count], 'g--', lw=0.5, label=f"coeff. mode {count+1}")
-        axarr[row, col].plot(range(0 , len(y_test)), predS_period[:,count], 'r--', lw=0.5, label=f"coeff. mode {count+1}")
-        axarr[row, col].plot(range(0 , len(y_test)), predR[:,count], 'g:', lw=0.5, label=f"coeff. mode {count+1}")
-        axarr[row, col].plot(range(0 , len(y_test)), predR_period[:,count], 'r:', lw=0.5, label=f"coeff. mode {count+1}")
-        axarr[row, col].plot(range(0 , len(y_test)), predBW[:,count], 'g:', lw=0.5, label=f"coeff. mode {count+1}")
-        axarr[row, col].plot(range(0 , len(y_test)), predBW_period[:,count], 'r:', lw=0.5, label=f"coeff. mode {count+1}")
+        axarr[row, col].plot(range(0 , len(y_test)), y_test[:,count], 'b', lw=0.5, label=f"orig")
+        axarr[row, col].plot(range(0 , len(y_test)), predS[:,count], 'r:', lw=0.5, label=f"S")
+        axarr[row, col].plot(range(0 , len(y_test)), predR[:,count], 'g', lw=0.5, label=f"R")
+        axarr[row, col].plot(range(0 , len(y_test)), predBW[:,count], lw=0.5, label=f"BW")
         axarr[row, col].grid()
         # add 1 for the POD mode number since we subtracted the mean
         axarr[row, col].set_title(f"mode coeff. {count + 1}")
@@ -68,7 +71,31 @@ for ax in axarr[1, :]:
     ax.set_xlabel("predicted timesteps")
 plt.xlim(0, len(y_test))
 #plt.ylim(bottom=10e-10)
+plt.legend()
 plt.savefig(f"{plt_save}prediction.png")
+
+#######################################################################################
+# plot prediciton mode
+#######################################################################################
+
+fig, axarr = plt.subplots(2, 2, sharex=True, sharey=True)
+count = 0
+for row in range(2):
+    for col in range(2):
+        axarr[row, col].plot(range(0 , len(y_test)), y_test[:,count], 'b', lw=0.5, label=f"orig")
+        axarr[row, col].plot(range(0 , len(y_test)), predS_period[:,count], 'r', lw=0.5, label=f"S_seq")
+        axarr[row, col].plot(range(0 , len(y_test)), predR_period[:,count], 'g', lw=0.5, label=f"R_seq")
+        axarr[row, col].plot(range(0 , len(y_test)), predBW_period[:,count], lw=0.5, label=f"BW_seq")
+        axarr[row, col].grid()
+        # add 1 for the POD mode number since we subtracted the mean
+        axarr[row, col].set_title(f"mode coeff. {count + 1}")
+        count += 1
+for ax in axarr[1, :]:
+    ax.set_xlabel("predicted timesteps")
+plt.xlim(0, len(y_test))
+#plt.ylim(bottom=10e-10)
+plt.legend()
+plt.savefig(f"{plt_save}prediction_seq.png")
 
 #######################################################################################
 # error plot
@@ -134,19 +161,19 @@ plt.savefig(f"{plt_save}error.png")
 
 fig, ax = plt.subplots()
 epochs = len(train_loss)                                      
-plt.plot(range(0, len(y_test)), meanErr, 'g', lw=1.0, label="prediction error")
-plt.plot(range(0, len(y_test)), meanErrSeq, 'r', lw=1.0, label= "seq. prediction error")
+plt.plot(range(0, len(y_test)), meanErr, 'g', lw=1.0, label="prediction error S")
+plt.plot(range(0, len(y_test)), meanErrSeq, 'r', lw=1.0, label= "seq. prediction error S")
 plt.xlim(0, len(y_test))
 plt.xlabel("preditected timesteps")
 plt.ylabel("mean error")
 plt.yscale("log")
 plt.legend()
-plt.savefig(f"{plt_save}meanError_seq.png")
+plt.savefig(f"{plt_save}meanError_S.png")
 
 fig, ax = plt.subplots()
 epochs = len(train_loss)                                      
-plt.plot(range(0, len(y_test)), meanErrR, 'g:', lw=1.0, label="prediction error R")
-plt.plot(range(0, len(y_test)), meanErrRSeq, 'r:', lw=1.0, label= "seq. prediction error R")
+plt.plot(range(0, len(y_test)), meanErrR, 'g', lw=1.0, label="prediction error R")
+plt.plot(range(0, len(y_test)), meanErrRSeq, 'r', lw=1.0, label= "seq. prediction error R")
 plt.xlim(0, len(y_test))
 plt.xlabel("preditected timesteps")
 plt.ylabel("mean error")
@@ -156,8 +183,8 @@ plt.savefig(f"{plt_save}meanError_res.png")
 
 fig, ax = plt.subplots()
 epochs = len(train_loss)                                      
-plt.plot(range(0, len(y_test)), meanErrbw, 'g--', lw=1.0, label="prediction error BW")
-plt.plot(range(0, len(y_test)), meanErrbwSeq, 'r--', lw=1.0, label= "seq. prediction error BW")
+plt.plot(range(0, len(y_test)), meanErrbw, 'g', lw=1.0, label="prediction error BW")
+plt.plot(range(0, len(y_test)), meanErrbwSeq, 'r', lw=1.0, label= "seq. prediction error BW")
 plt.xlim(0, len(y_test))
 plt.xlabel("preditected timesteps")
 plt.ylabel("mean error")
@@ -165,21 +192,36 @@ plt.yscale("log")
 plt.legend()
 plt.savefig(f"{plt_save}meanError_bw.png")
 
-
-
-
 #######################################################################################
 # plot y_train
 #######################################################################################
-
-print(y_trainR[0][0])
-
+"""
 fig, ax = plt.subplots()                                      
-plt.plot(range(0, len(y_trainR)), y_trainR, 'g', lw=1.0, label="R")
-plt.plot(range(0, len(y_trainS)), y_trainS, 'b', lw=1.0, label="S")
-plt.plot(range(0, len(y_trainBW)), y_trainBW, 'r', lw=1.0, label="BW")
+plt.plot(range(0, len(y_trainR)), y_trainR[:,0], 'g', lw=1.0, label="R")
+plt.plot(range(0, len(y_trainS)), y_trainS[:,0], 'b', lw=1.0, label="S")
+plt.plot(range(0, len(y_trainBW)), y_trainBW[:,0], 'r', lw=1.0, label="BW")
 plt.xlim(0, len(y_trainR))
 plt.xlabel("steps")
 plt.ylabel("")
 plt.legend()
 plt.savefig(f"{plt_save}y_train.png")
+
+
+for row in range(2):
+    for col in range(2):
+        
+        axarr[row, col].plot(range(0 , len(y_trainR)), y_trainR[:,count], 'g', lw=1, label=f"R {count+1}")
+        axarr[row, col].plot(range(0 , len(y_trainS)), y_trainS[:,count], 'b', lw=1, label=f"S {count+1}")
+        axarr[row, col].plot(range(0 , len(y_trainBW)), y_trainBW[:,count], 'r', lw=1, label=f"BW {count+1}")
+        
+        axarr[row, col].grid()
+        # add 1 for the POD mode number since we subtracted the mean
+        axarr[row, col].set_title(f"mode coeff. {count + 1} error")
+        count += 1
+for ax in axarr[1, :]:
+    ax.set_xlabel("predicted timesteps")
+plt.yscale("log")
+plt.ylim(bottom=10e-10)
+plt.xlim(0, len(y_test))
+plt.savefig(f"{plt_save}y_train modes.png")
+"""

@@ -15,11 +15,14 @@ singularityRun setExprBoundaryFields
 
 # decompose and run case
 singularityRun decomposePar
-singularityRunParallel -np 8 renumberMesh -parallel -overwrite
+#singularityRunParallel -np 8 renumberMesh -parallel -overwrite
 singularityRunParallel -np 8 pimpleFoam -parallel 
 singularityRun reconstructParMesh
 singularityRun reconstructPar
-rm -r processor*
+
+singularityRun postProcess #-func FOWriteCellCentres -constant
+
+#rm -r processor*
 
 
 #------------------------------------------------------------------------------

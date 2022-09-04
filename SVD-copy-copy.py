@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 code for SVD, uses data from flowtorch -> of_cylinder2d_binary
-SVD for multiple datasets
+SVD for multiple datasets + Re number in dataset integrated
 """
 import torch as pt
 from flowtorch.data import FOAMDataloader, mask_box
@@ -24,6 +24,7 @@ def modeMaker(path):
         data_matrix[:, i] = pt.masked_select(loader.load_snapshot("vorticity", time)[:, 2], mask)
     # subtract the temporal mean
     data_matrix -= pt.mean(data_matrix, dim=1).unsqueeze(-1)
+    print(data_matrix.shape)
     pt.save(window_times,f"{data_save}window_times.pt")
     return data_matrix
 
@@ -42,11 +43,30 @@ data_matrix = pt.cat((Re56,Re142,Re198,Re302,Re392), 0)
 svd = SVD(data_matrix)
 modeCoeff = pt.zeros(1)
 modeCoeff = svd.V#*svd.s    # Mode coefficients
-## modeCoeff wieder auseinanderschneiden um Re Zahl in Vektor einzufügen/oder Re im zusammengebautem Zustand einsetzem
-
+modeCoeff1 = modeCoeff[:len(Re56)]
 ReTensor = pt.zeros([len(modeCoeff),1])
-ReTensor += ReNumber
-modeCoeff = pt.cat((ReTensor,modeCoeff),1)
+ReTensor += 56
+modeCoeff1 = pt.cat((ReTensor,modeCoeff),1)
+modeCoeff2 = modeCoeff[len(Re56):len(Re142)]
+ReTensor = pt.zeros([len(modeCoeff),1])
+ReTensor += 142
+modeCoeff2 = pt.cat((ReTensor,modeCoeff),1)
+modeCoeff3 = modeCoeff[len(Re142):len(Re198)]
+ReTensor = pt.zeros([len(modeCoeff),1])
+ReTensor += 198
+modeCoeff3 = pt.cat((ReTensor,modeCoeff),1)
+modeCoeff4 = modeCoeff[len(Re198):len(Re302)]
+ReTensor = pt.zeros([len(modeCoeff),1])
+ReTensor += 302
+modeCoeff4 = pt.cat((ReTensor,modeCoeff),1)
+modeCoeff5 = modeCoeff[len(Re302):len(Re392)]
+ReTensor = pt.zeros([len(modeCoeff),1])
+ReTensor += 392
+modeCoeff5 = pt.cat((ReTensor,modeCoeff),1)
+
+## modeCoeff wieder auseinanderschneiden um Re Zahl in Vektor einzufügen/oder Re im zusammengebautem Zustand einsetzem
+modeCoeff = pt.cat((modeCoeff1, modeCoeff2, modeCoeff3, modeCoeff4, modeCoeff5),1)
+print(modeCoeff.shape)
 
 pt.save(svd.s,f"{data_save}svds.pt")
 pt.save(modeCoeff,f"{data_save}modeCoeff.pt")

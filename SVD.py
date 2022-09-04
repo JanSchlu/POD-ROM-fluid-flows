@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 code for SVD, uses data from flowtorch -> of_cylinder2d_binary
+SVD for one single dataset
 """
 import torch as pt
 from flowtorch.data import FOAMDataloader, mask_box
@@ -10,7 +11,7 @@ import sys
 sys.path.append('/home/jan/POD-ROM-fluid-flows/')
 from params import data_save
 
-path = "/home/jan/POD-ROM-fluid-flows/run/Re142"#of_cylinder2D_binary"           #path SVD
+path = "/home/jan/POD-ROM-fluid-flows/run/Re198"#of_cylinder2D_binary"           #path SVD
 
 loader = FOAMDataloader(path)
 times = loader.write_times

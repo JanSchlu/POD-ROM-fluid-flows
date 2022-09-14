@@ -121,6 +121,24 @@ def recalculate_output(input_data,output_data, string, deltaT):
             output[i] = (3*output_data[i+1] - 4*output_data[i] + output_data[i-1])/(2*deltaT)
         return output
 
+def recalculate_output_back(input_data,output_data, string, deltaT):
+    lastStepBegin= SVD_modes*p_steps                            # auf 3 stellen für pytest
+    output = pt.zeros(len(output_data)-1, len(output_data[0]))
+    if string == "sequential":
+        return output_data[:-1]
+    if string == "residual":
+        output[0] = output_data[0]-input_data[0,lastStepBegin:]
+        for i in range (1,len(output)):
+            output[i] = output_data[i]-output_data[i-1]
+        return output
+    if string == "backward":
+        output[0] = (3*output_data[1] - 4*output_data[0] + input_data[0,lastStepBegin:])/(2*deltaT)
+        for i in range (1,len(output)):
+            output[i] = (3*output_data[i+1] - 4*output_data[i] + output_data[i-1])/(2*deltaT)
+        return output
+
+
+
         
 def split_data(data_in: pt.tensor, timesteps_out: int, modes_out: int, timesteps_skip: int = 0):
     """Return timesteps for the number of modes given. 
@@ -136,52 +154,53 @@ def split_data(data_in: pt.tensor, timesteps_out: int, modes_out: int, timesteps
 
 
 
-def predictor_sequential(model, data, min, max):
+def predictor_sequential(model, data):
     predict = pt.ones([len(data)-p_steps-2,SVD_modes])                                           # pred len(test_data)-1-p_steps
     for i in range (0, len(predict)):
-        predict[i] = model(data[i]).squeeze()*(max - min) + min               # model predict data[i+1]
+        predict[i] = model(data[i]).squeeze()               # model predict data[i+1]
     predict = predict.detach().numpy()
     return predict
 
-def predictor_residual(model, data, min, max):
-    predict = pt.ones([len(data)-p_steps-2,SVD_modes])                                         # pred len(test_data)-1-p_steps
+def predictor_residual(model, data_normIN):
+    predict = pt.zeros([len(data_normIN)-p_steps-2,SVD_modes])                                         # pred len(test_data)-1-p_steps
     for i in range (0, len(predict)):
-        predict[0] = data[1]
-        if i>0:
-            predict[i] = data[i-1,p_steps * 20:] + model(data[i]).squeeze()*(max - min) + min
+        #predict[0] = data_normOUT[1]
+        if i>0:                 
+            predict[i] = model(data_normIN[i]).squeeze()
     predict = predict.detach().numpy()
     return predict
 
-def predictor_backward(model, data, min, max):
-    predict = pt.ones([len(data)-p_steps-2,SVD_modes])                                         # pred len(test_data)-1-p_steps
+def predictor_backward(model, data_normIN, min_x, max_x, min_y, max_y):
+    predict = pt.ones([len(data_normIN)-p_steps-2,SVD_modes])                                         # pred len(test_data)-1-p_steps
+    print(len(predict),len(data_normIN))
     for i in range (0, len(predict)):
-        predict[0] = data[1]*(max - min) + min
-        predict[1] = data[2]*(max - min) + min
-        if i>1:
-            predict[i] = 4/3*predict[i-1] - 1/3*predict[i-2] + 2/3*(model(data[i]).squeeze()*(max - min) + min)*5e-3 # 5e-3 is timestepssize
+        #predict[0] = (data_normIN[1]* (max_x - min_x) + min_x)
+        #predict[1] = (data_normIN[2]* (max_x - min_x) + min_x)
+        #if i>0:
+        predict[i] = (model(data_normIN[i]).squeeze())# 4/3*predict[i-1] - 1/3*predict[i-2] + 2/3*((max_y-min_y)*(model(data_normIN[i]).squeeze())+min_y)*5e-3 # 5e-3 is timestepssize
     predict = predict.detach().numpy()
     return predict
 
 
-def predictor_sequential_period(model, data, min, max):
+def predictor_sequential_period(model, data, min_x, max_x, min_y, max_y):
     predStore = pt.ones([len(data)-p_steps,SVD_modes+SVD_modes*p_steps])                 
     predicted = pt.ones([len(data)-p_steps-1,SVD_modes])
-    predStore[0] = data[0]                                                               #start is last timestep of trainData
-    predicted[0] = data[0, SVD_modes*p_steps:]
+    predStore[0] = data[0]                  # muss in x normiert sein                                             #start is last timestep of trainData
+    predicted[0] = ((data[0, SVD_modes*p_steps:]*(max_x - min_x) + min_x)-min_y)/(max_y-min_y)      # muss in y normiert sein
     for i in range (1, len(predStore)):
-        prediction = model(predStore[i-1]).squeeze()*(max - min) + min
+        prediction = ((model(predStore[i-1]).squeeze()*(max_y - min_y) + min_y)-min_x)/(max_x - min_x)      # muss in x normerit sein -> wird in predStore gesepichertz
         predStore[i] = pt.cat((predStore[i-1,SVD_modes:], prediction))
         predicted[i-1] = prediction 
     predicted = predicted.detach().numpy()
     return predicted
 
-def predictor_residual_period(model, data, min, max):
+def predictor_residual_period(model, data, min_x, max_x, min_y, max_y):
     predStore = pt.ones([len(data)-p_steps,SVD_modes+SVD_modes*p_steps])                 
     predicted = pt.ones([len(data)-p_steps-1,SVD_modes])
     predStore[0] = data[0]                                                               #start is last timestep of trainData
-    predicted[0] = data[0, SVD_modes*p_steps:]
+    predicted[0] = ((data[0, SVD_modes*p_steps:]*(max_x - min_x) + min_x)-min_y)/(max_y-min_y)
     for i in range (1, len(predStore)):
-        prediction = predStore[i-1,p_steps*20:]+model(predStore[i-1]).squeeze()*(max - min) + min
+        prediction = (((model(predStore[i-1]).squeeze())*1))#*(max_y - min_y) + min_y)-min_x)/(max_x - min_x)  #predStore[i-1,p_steps*20:] + 
         predStore[i] = pt.cat((predStore[i-1,SVD_modes:], prediction))
         predicted[i-1] = prediction 
     predicted = predicted.detach().numpy()
@@ -195,8 +214,8 @@ def predictor_backward_period(model, data, min, max):
 
     predict = pt.ones([len(data)-p_steps,SVD_modes])                                         # pred len(test_data)-1-p_steps
     for i in range (0, len(predict)):
-        predict[0] = data[1]
-        predict[1] = data[2]
+        predict[0] = data[1, SVD_modes*p_steps:]
+        predict[1] = data[2, SVD_modes*p_steps:]
         if i>1:
             predict[i] = 4/3*predict[i-1] - 1/3*predict[i-2] + 2/3*(model(data[i]).squeeze()*(max - min) + min)*5e-3 # 5e-3 is timestepssize
     predict = predict.detach().numpy()
@@ -252,10 +271,28 @@ def dataManipulator(modeData, modenumbers, steps, string):
     train_data=train_data[:-1]
     test_data, y_test = rearrange_data(split_data(modeData, lenTest, modenumbers, lenTrain), steps)
     y_test = recalculate_output(test_data,y_test,string,5e-3)
-    pt.save(test_data, f"{data_save}test_data.pt")
-    pt.save(y_test, f"{data_save}y_test.pt")
-    
+        
     return train_data, y_train, test_data, y_test
+
+
+def dataManipulator_yTest(modeData, modenumbers, steps):
+
+    ###### normierung
+    #minData = modeData.min(dim=0).values
+    #maxData = modeData.max(dim=0).values
+    #modeData = (modeData - minData)/(maxData-minData)
+    #pt.save(minData, f"{data_save}minCoeff.pt")
+    #pt.save(maxData, f"{data_save}maxCoeff.pt")
+    
+    ###### Längen der Tensoren für Training und Validierung aus Länge der Daten bestimmen und speichern
+    lenTrain = pt.load (f"{data_save}lenTrain.pt")
+    lenTest = pt.load (f"{data_save}lenTest.pt")
+    
+    ###### Daten aufteilen(gewünsche Anzahl an Moden), umsortieren und Vergeleichswerte(y) berechnen in abh vom Differenzenschemata
+    test_data, y_test = rearrange_data(split_data(modeData, lenTest, modenumbers, lenTrain), steps)
+    #y_test = recalculate_output(test_data,y_test,string,5e-3)
+        
+    return test_data, y_test
 
 
 
@@ -264,4 +301,38 @@ def dataManipulator(modeData, modenumbers, steps, string):
     # -> TEST:  mit mehr SVD modes
     # -> TEST:  mit Fehlerpfortpflazung
     # -> TEST:  mit richtigen Daten
+
+class MinMaxScaler(object):
+    """Class to scale/re-scale data to the range [-1, 1] and back.
+    """
+    def __init__(self):
+        self.min = None
+        self.max = None
+        self.trained = False
+
+    def fit(self, data):
+        self.min = data.min(dim=0).values
+        self.max = data.max(dim=0).values
+        self.trained = True
+
+    def scale(self, data):
+        assert self.trained
+        assert len(data.shape) == 2
+        data_norm = (data - self.min) / (self.max - self.min)
+        return data_norm#2.0*data_norm - 1.0
+
+    def rescale(self, data_norm):
+        assert self.trained
+        assert len(data_norm.shape) == 2
+        data = data_norm#(data_norm + 1.0) * 0.5
+        return data * (self.max - self.min) + self.min
+    
+    def save(self):
+        return self.min, self.max
+
+    def restore(self, min, max):
+        self.min = min
+        self.max = max
+        self.trained = True
+
 

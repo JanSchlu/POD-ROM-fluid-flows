@@ -11,7 +11,7 @@ import sys
 sys.path.append('/home/jan/POD-ROM-fluid-flows/')
 from params import data_save
 
-path = "/home/jan/POD-ROM-fluid-flows/run/Re198"#of_cylinder2D_binary"           #path SVD
+path = "/home/jan/POD-ROM-fluid-flows/run/of_cylinder2D_binary"           #path SVD
 
 loader = FOAMDataloader(path)
 times = loader.write_times
@@ -38,5 +38,5 @@ modeCoeff = svd.V#*svd.s    # Mode coefficients
 print ("modeCoeff",modeCoeff.shape)
 print (modeCoeff)
 pt.save(svd.s,f"{data_save}svds.pt")
-pt.save(modeCoeff,f"{data_save}modeCoeff.pt")
+pt.save(modeCoeff,f"{data_save}modeCoeffBinary.pt")
 pt.save(window_times,f"{data_save}window_times.pt")

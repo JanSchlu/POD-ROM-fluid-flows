@@ -8,14 +8,6 @@ sys.path.append('/home/jan/POD-ROM-fluid-flows/')
 
 train_loss = pt.zeros(10000)
 
-modeCoeff = pt.load(f"{data_save}modeCoeff.pt")
-minCoeff = modeCoeff.min(dim=0).values
-maxCoeff = modeCoeff.max(dim=0).values
-modeCoeff = (modeCoeff - minCoeff)/(maxCoeff-minCoeff)
-pt.save(minCoeff, f"{data_save}minCoeff.pt")
-pt.save(maxCoeff, f"{data_save}maxCoeff.pt")
-window_times = pt.load(f"{data_save}window_times.pt")
-
 #######################################################################################
 # Initialize model
 #######################################################################################
@@ -28,33 +20,33 @@ print(model)
 # define and save datasets
 #######################################################################################
 
-data1 = pt.load(f"{data_save}modeCoeff56.pt")
-train_data1, y_train1, test_data1, y_test1 = dataManipulator(data1, SVD_modes, p_steps, "residual")                    #!!!!!! minMax wird nur einmal gespeichert nicht für jede Re
-data2 = pt.load(f"{data_save}modeCoeff142.pt")
-train_data2, y_train2, test_data2, y_test2 = dataManipulator(data2, SVD_modes, p_steps, "residual")                    #!!!!!! minMax wird nur einmal gespeichert nicht für jede Re
-data3 = pt.load(f"{data_save}modeCoeff302.pt")
-train_data3, y_train3, test_data3, y_test3 = dataManipulator(data3, SVD_modes, p_steps, "residual")  
+data = pt.load(f"{data_save}modeCoeffBinary.pt")
+data= data[:,:SVD_modes]
 
-train_data = pt.cat((train_data1, train_data2, train_data3),0)
-y_train = pt.cat((y_train1, y_train2,y_train3), 0)
-test_data1 = test_data1[:-1]
-test_data2 = test_data2[:-1]
-test_data3 = test_data3[:-1]
-test_data = pt.cat((test_data1,test_data2, test_data3), 0)
-y_test= pt.cat((y_test1,y_test2, y_test3), 0)
+train_data, y_train, test_data, y_test = dataManipulator(data, SVD_modes, p_steps, "residual") 
 
-minMaxData = pt.cat((train_data,y_train,test_data,y_test),0)
+InData = pt.cat((train_data, test_data), 0)
+InScaler = MinMaxScaler()
+InScaler.fit(InData)
+train_data_norm = InScaler.scale(train_data)
+test_data_norm = InScaler.scale(test_data)
 
-minData = minMaxData.min(dim=0).values
-maxData = minMaxData.max(dim=0).values
+OutData = pt.cat((y_train, y_test), 0)
+OutScaler = MinMaxScaler()
+OutScaler.fit(OutData)
+y_train_norm = OutScaler.scale(y_train)
+y_test_norm = OutScaler.scale(y_test)
 
-train_data = (train_data - minData)/(maxData-minData)
-y_train = (y_train - minData)/(maxData-minData)
-test_data = (test_data - minData)/(maxData-minData)
-y_test = (y_test - minData)/(maxData-minData)
-
-pt.save(minData, f"{data_save}min_y_trainR.pt")
-pt.save(maxData, f"{data_save}mAX_y_trainR.pt")
+MinIn, MaxIn = InScaler.save()
+pt.save(MinIn, f"{data_save}MinInR.pt")
+pt.save(MaxIn, f"{data_save}MaxInR.pt")
+MinOut, MaxOut = OutScaler.save()
+pt.save(MinOut, f"{data_save}MinOutR.pt")
+pt.save(MaxOut, f"{data_save}MaxOutR.pt")
+pt.save(train_data_norm, f"{data_save}train_data_norm_R.pt")
+pt.save(y_train_norm, f"{data_save}y_train_norm_R.pt")
+pt.save(test_data_norm, f"{data_save}test_data_norm_R.pt")
+pt.save(y_test_norm, f"{data_save}y_test_norm_R.pt")
 
 
 #######################################################################################
@@ -64,5 +56,5 @@ pt.save(maxData, f"{data_save}mAX_y_trainR.pt")
 learnRate = 0.001
 epochs = 3000
 data_saveR = "run/data/R/"
-train_lossR = optimize_model(model, train_data, y_train, epochs, lr=learnRate, save_best=data_saveR)
+train_lossR = optimize_model(model, train_data_norm, y_train_norm, epochs, lr=learnRate, save_best=data_saveR)
 pt.save(train_lossR, f"{data_save}train_lossR.pt")

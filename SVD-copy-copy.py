@@ -28,26 +28,26 @@ def modeMaker(path):
     pt.save(window_times,f"{data_save}window_times.pt")
     return data_matrix
 
-pat = "/home/jan/POD-ROM-fluid-flows/run/Re56"
-Re56 = modeMaker(pat)
+#pat = "/home/jan/POD-ROM-fluid-flows/run/Re56"                 # erstmal weggelassen, da moden ein nicht periodisches Verhalten auffweisen -> noch keine ausgebildete Wirbelstraße
+#Re56 = modeMaker(pat)
 pat = "/home/jan/POD-ROM-fluid-flows/run/Re142"
 Re142 = modeMaker(pat)
-pat = "/home/jan/POD-ROM-fluid-flows/run/Re302"
+pat = "/home/jan/POD-ROM-fluid-flows/run/Re198"
 Re198 = modeMaker(pat)
 pat = "/home/jan/POD-ROM-fluid-flows/run/Re302"
 Re302 = modeMaker(pat)
-pat = "/home/jan/POD-ROM-fluid-flows/run/Re302"
+pat = "/home/jan/POD-ROM-fluid-flows/run/Re392"
 Re392 = modeMaker(pat)
 
-data_matrix = pt.cat((Re56,Re142,Re198,Re302,Re392), 0)     
+data_matrix = pt.cat((Re142,Re198,Re302,Re392), 0)     
 svd = SVD(data_matrix)
 modeCoeff = pt.zeros(1)
 modeCoeff = svd.V#*svd.s    # Mode coefficients
-modeCoeff1 = modeCoeff[:len(Re56)]
-ReTensor = pt.zeros([len(modeCoeff),1])
-ReTensor += 56
-modeCoeff1 = pt.cat((ReTensor,modeCoeff),1)
-modeCoeff2 = modeCoeff[len(Re56):len(Re142)]
+#modeCoeff1 = modeCoeff[:len(Re56)]
+#ReTensor = pt.zeros([len(modeCoeff),1])
+#ReTensor += 56
+#modeCoeff1 = pt.cat((ReTensor,modeCoeff),1)
+modeCoeff2 = modeCoeff[:len(Re142)]                         #modeCoeff2 = modeCoeff[len(Re56):len(Re142)]
 ReTensor = pt.zeros([len(modeCoeff),1])
 ReTensor += 142
 modeCoeff2 = pt.cat((ReTensor,modeCoeff),1)
@@ -65,7 +65,7 @@ ReTensor += 392
 modeCoeff5 = pt.cat((ReTensor,modeCoeff),1)
 
 ## modeCoeff wieder auseinanderschneiden um Re Zahl in Vektor einzufügen/oder Re im zusammengebautem Zustand einsetzem
-modeCoeff = pt.cat((modeCoeff1, modeCoeff2, modeCoeff3, modeCoeff4, modeCoeff5),1)
+modeCoeff = pt.cat(( modeCoeff2, modeCoeff3, modeCoeff4, modeCoeff5),1)
 print(modeCoeff.shape)
 
 pt.save(svd.s,f"{data_save}svds.pt")

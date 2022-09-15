@@ -36,28 +36,15 @@ predS = pt.load(f"{data_save}predS.pt")
 predR = pt.load(f"{data_save}predR.pt")
 predBW = pt.load(f"{data_save}predBW.pt")
 predR[0] = y_test_norm_R[0] 
-MinInS = pt.load(f"{data_save}MinInS.pt")
-MaxInS = pt.load(f"{data_save}MaxInS.pt")
 modes = pt.load(f"{data_save}modeCoeffBinary.pt")
 
+scalerdict = dataloader(f"{data_save}scalerdict.pkl")
 
-MinOutS = pt.load(f"{data_save}MinOutS.pt")
-MinOutS = MinOutS[:SVD_modes]
-MaxOutS = pt.load(f"{data_save}MaxOutS.pt")
-MaxOutS = MaxOutS[:SVD_modes]
-MinOutR = pt.load(f"{data_save}MinOutR.pt")
-MinOutR = MinOutR[:SVD_modes]
-MaxOutR = pt.load(f"{data_save}MaxOutR.pt")
-MaxOutR = MaxOutR[:SVD_modes]
-MinOutBW = pt.load(f"{data_save}MinOutBW.pt")
-MinOutBW = MinOutBW[:SVD_modes]
-MaxOutBW = pt.load(f"{data_save}MaxOutBW.pt")
-MaxOutBW = MaxOutBW[:SVD_modes]
 
 
 predS_period = pt.load(f"{data_save}predS_period.pt")
 predR_period = pt.load(f"{data_save}predR_period.pt")
-predBW_period = pt.load(f"{data_save}predBW_period.pt")
+#predBW_period = pt.load(f"{data_save}predBW_period.pt")
 
 
 data2 = pt.load(f"{data_save}modeCoeffBinary.pt")
@@ -89,14 +76,14 @@ plt.savefig(f"{plt_save}loss.png")
 # plot prediciton mode
 #######################################################################################
 
-y_testS = (y_test_norm_S[:-1] - MinOutS )  /(MaxOutS-MinOutS)
+y_testS = (y_test_norm_S[:-1] - scalerdict["MinOutS"] )  /(scalerdict["MaxOutS"]-scalerdict["MinOutS"])
 
 S = predS
 R = predR
 BW = pt.tensor(predBW)
 
-y_testS = y_test_norm_S[:-4]
-y_testR = y_test_norm_R[:-4]
+y_testS = y_test_norm_S
+y_testR = y_test_norm_R
 y_testBW = y_test_norm_BW[:-1]
 
 
@@ -107,7 +94,7 @@ for row in range(2):
         axarr[row, col].plot(range(0 , len(y_testS)), y_testS[:,count], 'b', lw=0.5, label=f"orig")
         axarr[row, col].plot(range(0 , len(predS_period)), predS_period[:,count], 'r', lw=0.5, label=f"S_seq")
         axarr[row, col].plot(range(0 , len(predR_period)), predR_period[:,count], 'g', lw=0.5, label=f"R_seq")
-        axarr[row, col].plot(range(0 , len(predBW_period)), predBW_period[:,count], lw=0.5, label=f"BW_seq")
+        #axarr[row, col].plot(range(0 , len(predBW_period)), predBW_period[:,count], lw=0.5, label=f"BW_seq")
         axarr[row, col].grid()
         # add 1 for the POD mode number since we subtracted the mean
         axarr[row, col].set_title(f"mode coeff. {count + 1}")

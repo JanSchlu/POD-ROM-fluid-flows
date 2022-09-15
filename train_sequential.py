@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import torch as pt
+import pickle
 import sys
 sys.path.append('/home/jan/POD-ROM-fluid-flows/')
 from functions import *
@@ -37,12 +38,17 @@ OutScaler.fit(OutData)
 y_train_norm = OutScaler.scale(y_train)
 y_test_norm = OutScaler.scale(y_test)
 
-MinIn, MaxIn = InScaler.save()
-pt.save(MinIn, f"{data_save}MinInS.pt")
-pt.save(MaxIn, f"{data_save}MaxInS.pt")
-MinOut, MaxOut = OutScaler.save()
-pt.save(MinOut, f"{data_save}MinOutS.pt")
-pt.save(MaxOut, f"{data_save}MaxOutS.pt")
+
+#MinInS = MinInS[:SVD_modes]
+#MaxInS = MaxInS[:SVD_modes]
+#MinOutS = MinOutS[:SVD_modes]
+#MaxOutS = MaxOutS[:SVD_modes]
+
+scalerdict = dataloader(f"{data_save}scalerdict.pkl")
+scalerdict["MinInS"], scalerdict["MaxInS"] = InScaler.save()
+scalerdict["MinOutS"], scalerdict["MaxOutS"] = OutScaler.save()
+with open(f"{data_save}scalerdict.pkl", "wb") as output:
+    pickle.dump(scalerdict,output)
 
 pt.save(train_data_norm, f"{data_save}train_data_norm_S.pt")
 pt.save(y_train_norm, f"{data_save}y_train_norm_S.pt")

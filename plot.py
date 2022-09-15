@@ -31,28 +31,14 @@ train_loss = pt.load(f"{data_save}train_loss.pt")
 train_lossR = pt.load(f"{data_save}train_lossR.pt")
 train_lossBW = pt.load(f"{data_save}train_lossBW.pt")
 
+
+
+scalerdict = dataloader(f"{data_save}scalerdict.pkl")
 predS = pt.load(f"{data_save}predS.pt")
 predR = pt.load(f"{data_save}predR.pt")
 predBW = pt.load(f"{data_save}predBW.pt")
 predR[0] = y_test_norm_R[0] 
-MinInS = pt.load(f"{data_save}MinInS.pt")
-MaxInS = pt.load(f"{data_save}MaxInS.pt")
 modes = pt.load(f"{data_save}modeCoeffBinary.pt")
-
-
-MinOutS = pt.load(f"{data_save}MinOutS.pt")
-MinOutS = MinOutS[:SVD_modes]
-MaxOutS = pt.load(f"{data_save}MaxOutS.pt")
-MaxOutS = MaxOutS[:SVD_modes]
-MinOutR = pt.load(f"{data_save}MinOutR.pt")
-MinOutR = MinOutR[:SVD_modes]
-MaxOutR = pt.load(f"{data_save}MaxOutR.pt")
-MaxOutR = MaxOutR[:SVD_modes]
-MinOutBW = pt.load(f"{data_save}MinOutBW.pt")
-MinOutBW = MinOutBW[:SVD_modes]
-MaxOutBW = pt.load(f"{data_save}MaxOutBW.pt")
-MaxOutBW = MaxOutBW[:SVD_modes]
-
 
 #predS_period = pt.load(f"{data_save}predS_period.pt")
 #predR_period = pt.load(f"{data_save}predR_period.pt")
@@ -150,15 +136,15 @@ plt.savefig(f"{plt_save}DataBW.png")
 # plot prediciton mode
 #######################################################################################
 
-y_testS = (y_test_norm_S[:-1] - MinOutS )  /(MaxOutS-MinOutS)
+y_testS = (y_test_norm_S[:-1] - scalerdict["MinOutS"] )  /(scalerdict["MaxOutS"]-scalerdict["MinOutS"])
 
 S = predS
 R = predR                                        
 BW = pt.tensor(predBW)
 
-y_testS = y_test_norm_S[:-5]
-y_testR = y_test_norm_R[:-5]
-y_testBW = y_test_norm_BW[:-5]
+y_testS = y_test_norm_S[:-p_steps-1]
+y_testR = y_test_norm_R[:-p_steps-1]
+y_testBW = y_test_norm_BW[:-p_steps-1]
 
 """
 fig, axarr = plt.subplots(2, 2, sharex=True, sharey=True)

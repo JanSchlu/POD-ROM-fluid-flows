@@ -5,5 +5,5 @@
 import os
 
 
-os.system('run/Re198'+'/Allrun.singularity')
+os.system('run/Re1988'+'/Allrun.singularity')
 

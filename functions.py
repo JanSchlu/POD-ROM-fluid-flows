@@ -1,6 +1,8 @@
 
 import torch as pt
 from os.path import isdir
+import pickle
+import os
 
 from params import SVD_modes, p_steps, data_save
 
@@ -199,9 +201,12 @@ def predictor_residual_period(model, data, min_x, max_x, min_y, max_y):
     predicted = pt.ones([len(data)-p_steps-1,SVD_modes])
     predStore[0] = data[0]                                                               #start is last timestep of trainData
     predicted[0] = ((data[0, SVD_modes*p_steps:]*(max_x - min_x) + min_x)-min_y)/(max_y-min_y)
-    for i in range (1, len(predStore)):
-        prediction = (((model(predStore[i-1]).squeeze())*1))#*(max_y - min_y) + min_y)-min_x)/(max_x - min_x)  #predStore[i-1,p_steps*20:] + 
+    for i in range (1, 100):#len(predStore)):
+        prediction = (((model(predStore[i-1]).squeeze())*(max_y - min_y) + min_y)-min_x)/(max_x - min_x)  #predStore[i-1,p_steps*20:] + 
+        print("1",prediction)
+        print("2",predStore[i-1,SVD_modes:])
         predStore[i] = pt.cat((predStore[i-1,SVD_modes:], prediction))
+        print("3",predStore[i])
         predicted[i-1] = prediction 
     predicted = predicted.detach().numpy()
     return predicted
@@ -336,3 +341,9 @@ class MinMaxScaler(object):
         self.trained = True
 
 
+def dataloader(path):
+    if os.path.isfile(path) == True:
+        with open(path, "rb") as input:
+            data = pickle.load(input)
+    else: data = {}
+    return data

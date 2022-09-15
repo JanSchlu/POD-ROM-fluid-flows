@@ -10,30 +10,8 @@ lenTest = pt.load(f"{data_save}lenTest.pt")
 test_data_norm_S = pt.load(f"{data_save}test_data_norm_S.pt")
 test_data_norm_R = pt.load(f"{data_save}test_data_norm_R.pt")
 test_data_norm_BW = pt.load(f"{data_save}test_data_norm_BW.pt")
-MinInS = pt.load(f"{data_save}MinInS.pt")
-MinInS = MinInS[:SVD_modes]
-MaxInS = pt.load(f"{data_save}MaxInS.pt")
-MaxInS = MaxInS[:SVD_modes]
-MinOutS = pt.load(f"{data_save}MinOutS.pt")
-MinOutS = MinOutS[:SVD_modes]
-MaxOutS = pt.load(f"{data_save}MaxOutS.pt")
-MaxOutS = MaxOutS[:SVD_modes]
-MinInR = pt.load(f"{data_save}MinInR.pt")
-MinInR = MinInR[:SVD_modes]
-MaxInR = pt.load(f"{data_save}MaxInR.pt")
-MaxInR = MaxInR[:SVD_modes]
-MinOutR = pt.load(f"{data_save}MinOutR.pt")
-MinOutR = MinOutR[:SVD_modes]
-MaxOutR = pt.load(f"{data_save}MaxOutR.pt")
-MaxOutR = MaxOutR[:SVD_modes]
-MinOutBW = pt.load(f"{data_save}MinOutBW.pt")
-MinOutBW = MinOutBW[:SVD_modes]
-MaxOutBW = pt.load(f"{data_save}MaxOutBW.pt")
-MaxOutBW = MaxOutBW[:SVD_modes]
-MinInBW = pt.load(f"{data_save}MinInBW.pt")
-MinInBW = MinInBW[:SVD_modes]
-MaxInBW = pt.load(f"{data_save}MaxInBW.pt")
-MaxInBW = MaxInBW[:SVD_modes]
+scalerdict = dataloader(f"{data_save}scalerdict.pkl")
+
 ######################################################################################
 # load model
 #######################################################################################
@@ -54,15 +32,15 @@ best_modelBW.load_state_dict(pt.load(f"{data_saveBW}best_model_train.pt"))
 
 predS = predictor_sequential(best_modelS, test_data_norm_S)           # alle test Datensätze sind gleich
 predR = predictor_residual(best_modelR, test_data_norm_R)
-predBW = predictor_backward(best_modelBW, test_data_norm_BW, MinInBW, MaxInBW, MinOutBW, MaxOutBW)
+predBW = predictor_backward(best_modelBW, test_data_norm_BW, scalerdict["MinInBW"], scalerdict["MaxInBW"], scalerdict["MinOutBW"], scalerdict["MaxOutBW"])
 
 #######################################################################################
 # predict from predicted
 #######################################################################################
 
 
-predS_period = predictor_sequential_period(best_modelS, test_data_norm_S, MinInS, MaxInS, MinOutS, MaxOutS)
-predR_period = predictor_residual_period(best_modelR, test_data_norm_R, MinInR, MaxInR, MinOutR, MaxOutR)
+predS_period = predictor_sequential_period(best_modelS, test_data_norm_S, scalerdict["MinInS"], scalerdict["MaxInS"], scalerdict["MinOutS"], scalerdict["MaxOutS"])
+predR_period = predictor_residual_period(best_modelR, test_data_norm_R, scalerdict["MinInR"], scalerdict["MaxInR"], scalerdict["MinOutR"], scalerdict["MaxOutR"])
 #predBW_period= predictor_backward_period(best_modelBW, test_data_norm_BW, MinOutBW, MaxOutBW)
 
 pt.save(predS,f"{data_save}predS.pt")

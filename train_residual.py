@@ -37,12 +37,18 @@ OutScaler.fit(OutData)
 y_train_norm = OutScaler.scale(y_train)
 y_test_norm = OutScaler.scale(y_test)
 
-MinIn, MaxIn = InScaler.save()
-pt.save(MinIn, f"{data_save}MinInR.pt")
-pt.save(MaxIn, f"{data_save}MaxInR.pt")
-MinOut, MaxOut = OutScaler.save()
-pt.save(MinOut, f"{data_save}MinOutR.pt")
-pt.save(MaxOut, f"{data_save}MaxOutR.pt")
+#MinInR = MinInR[:SVD_modes]
+#MaxInR = MaxInR[:SVD_modes]
+#MinOutR = MinOutR[:SVD_modes]
+#MaxOutR = MaxOutR[:SVD_modes]
+
+scalerdict = dataloader(f"{data_save}scalerdict.pkl")
+scalerdict["MinInR"], scalerdict["MaxInR"] = InScaler.save()
+scalerdict["MinOutR"], scalerdict["MaxOutR"] = OutScaler.save()
+with open(f"{data_save}scalerdict.pkl", "wb") as output:
+    pickle.dump(scalerdict,output)
+
+
 pt.save(train_data_norm, f"{data_save}train_data_norm_R.pt")
 pt.save(y_train_norm, f"{data_save}y_train_norm_R.pt")
 pt.save(test_data_norm, f"{data_save}test_data_norm_R.pt")

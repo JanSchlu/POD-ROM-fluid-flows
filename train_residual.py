@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.8
 
 import torch as pt
 import sys
@@ -30,6 +30,7 @@ InScaler = MinMaxScaler()
 InScaler.fit(InData)
 train_data_norm = InScaler.scale(train_data)
 test_data_norm = InScaler.scale(test_data)
+InScaler.fit(data)
 
 OutData = pt.cat((y_train, y_test), 0)
 OutScaler = MinMaxScaler()
@@ -37,23 +38,14 @@ OutScaler.fit(OutData)
 y_train_norm = OutScaler.scale(y_train)
 y_test_norm = OutScaler.scale(y_test)
 
-#MinInR = MinInR[:SVD_modes]
-#MaxInR = MaxInR[:SVD_modes]
-#MinOutR = MinOutR[:SVD_modes]
-#MaxOutR = MaxOutR[:SVD_modes]
-
 scalerdict = dataloader(f"{data_save}scalerdict.pkl")
 scalerdict["MinInR"], scalerdict["MaxInR"] = InScaler.save()
 scalerdict["MinOutR"], scalerdict["MaxOutR"] = OutScaler.save()
 with open(f"{data_save}scalerdict.pkl", "wb") as output:
     pickle.dump(scalerdict,output)
 
-
-pt.save(train_data_norm, f"{data_save}train_data_norm_R.pt")
-pt.save(y_train_norm, f"{data_save}y_train_norm_R.pt")
-pt.save(test_data_norm, f"{data_save}test_data_norm_R.pt")
+pt.save(test_data_norm, f"{data_save}test_data_norm.pt")
 pt.save(y_test_norm, f"{data_save}y_test_norm_R.pt")
-
 
 #######################################################################################
 # training model

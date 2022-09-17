@@ -1,0 +1,13 @@
+#!/bin/sh
+cd "${0%/*}" || exit                                # Run from this directory
+#------------------------------------------------------------------------------
+
+./train_sequential.py
+./train_residual.py
+./train_backward.py
+
+./prediction.py
+
+./plot.py
+
+#------------------------------------------------------------------------------

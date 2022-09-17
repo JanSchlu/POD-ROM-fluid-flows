@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.8
 """
 code for SVD, uses data from flowtorch -> of_cylinder2d_binary
 SVD for multiple datasets

@@ -1,13 +1,16 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.8
 """
 code for SVD, uses data from flowtorch -> of_cylinder2d_binary
 SVD for multiple datasets + Re number in dataset integrated
 """
 import torch as pt
+
 from flowtorch.data import FOAMDataloader, mask_box
+
 from flowtorch.analysis import SVD
 import sys
 from params import data_save
+
 sys.path.append('/home/jan/POD-ROM-fluid-flows/')
 def modeMaker(path):
     loader = FOAMDataloader(path)
@@ -73,4 +76,4 @@ pt.save(modeCoeff,f"{data_save}modeCoeff.pt")
 
 # SVD fürt alle re gleichzeitg ausführen und dann trennen und Re in vektr einfügen
 #-> wegn rekonstirklion, besonders für interpolation
-
+print("alls klar")

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3.8
 
+from re import S
 import torch as pt
 from os.path import isdir
 import pickle
@@ -150,15 +151,11 @@ def predictor_sequential(model, data_norm_x,scalerdic):
     InScaler.restore(scalerdic["MinInS"], scalerdic["MaxInS"])
     OutScaler = MinMaxScaler()
     OutScaler.restore(scalerdic["MinOutS"], scalerdic["MaxOutS"])
-    predicted = pt.ones([len(data_norm_x),SVD_modes])
-    predicted_x = pt.ones([len(data_norm_x),SVD_modes])
-    predicted_x[0] = data_norm_x[0]   
-    predicted[0] = InScaler.rescale(data_norm_x[0])   
-
+    predicted_x = pt.ones([len(data_norm_x),SVD_modes + SVD_modes*p_steps])
+    predicted_x[0] = data_norm_x[0]
     for i in range (0, len(predicted_x)-1):
-        predicted[i+1] = OutScaler.rescale(model(predicted_x[i]).squeeze()) 
-        predicted_x[i+1] = InScaler.scale(predicted[i+1])
-    predicted_x = InScaler.scale(predicted)
+        predictor = OutScaler.rescale(model(predicted_x[i]).squeeze()) 
+        predicted_x[i+1] = pt.cat((predicted_x[i,SVD_modes:],InScaler.scale(predictor)))
     predicted_x = predicted_x.detach().numpy()
     return predicted_x
 
@@ -167,16 +164,13 @@ def predictor_residual(model, data_norm_x,scalerdic):
     InScaler = MinMaxScaler()
     InScaler.restore(scalerdic["MinInR"], scalerdic["MaxInR"])
     OutScaler = MinMaxScaler()
-    OutScaler.restore(scalerdic["MinOutR"], scalerdic["MaxOutR"])             
-    predicted = pt.ones([len(data_norm_x),SVD_modes])
-    predicted_x = pt.ones([len(data_norm_x),SVD_modes])
+    OutScaler.restore(scalerdic["MinOutR"], scalerdic["MaxOutR"])          
+    predicted_x = pt.ones([len(data_norm_x),SVD_modes + SVD_modes*p_steps])
     predicted_x[0] = data_norm_x[0]
-    predicted[0] = InScaler.rescale(data_norm_x[0])   
-
     for i in range (0, len(predicted_x)-1):
-        predicted[i+1] = InScaler.rescale(predicted_x[i])+OutScaler.rescale(model(predicted_x[i]).squeeze()) 
-        predicted_x[i+1] = InScaler.scale(predicted[i+1])
-    predicted_x = InScaler.scale(predicted)
+        predictor = OutScaler.rescale(model(predicted_x[i]).squeeze())
+        predictor = InScaler.rescale(predicted_x[i,SVD_modes*p_steps:]) + predictor 
+        predicted_x[i+1] = pt.cat((predicted_x[i,SVD_modes:],InScaler.scale(predictor)))
     predicted_x = predicted_x.detach().numpy()
     return predicted_x
 
@@ -185,17 +179,18 @@ def predictor_backward(model, data_norm_x, scalerdic):
     InScaler.restore(scalerdic["MinInBW"], scalerdic["MaxInBW"])
     OutScaler = MinMaxScaler()
     OutScaler.restore(scalerdic["MinOutBW"], scalerdic["MaxOutBW"])                  
-    y_x = pt.zeros(len(data_norm_x), SVD_modes)
-    y_BW = pt.zeros(len(data_norm_x), SVD_modes)
-    y_BW[0]=InScaler.rescale(data_norm_x[0])   
-    y_BW[1]=InScaler.rescale(data_norm_x[1])
+    y_x = pt.zeros([len(data_norm_x), SVD_modes + SVD_modes*p_steps])
+    y_BW = pt.ones([len(data_norm_x),SVD_modes])
+    data = InScaler.rescale(data_norm_x)
+    y_BW[0]=data[0,SVD_modes*p_steps:]   
+    y_BW[1]=data[1,SVD_modes*p_steps:]
     y_x[0] =data_norm_x[0]    
     y_x[1] =data_norm_x[1]    
 
-    for i in range(1,len(y_BW)-1):
+    for i in range(1,len(y_x)-1):
         y = OutScaler.rescale(model(y_x[i]).squeeze())
         y_BW[i+1]= 4/3*y_BW[i] -1/3*y_BW[i-1] + 2/3*y*5e-3
-        y_x[i+1] = InScaler.scale(y_BW[i+1])
+        y_x[i+1] = pt.cat((y_x[i,SVD_modes:],InScaler.scale(y_BW[i+1])))
     predicted_x = y_x.detach().numpy()
     return predicted_x    
 
@@ -246,14 +241,35 @@ class MinMaxScaler(object):
     def scale(self, data):
         assert self.trained
         #assert len(data.shape) == 2
+        data_norm = data
+        min = self.min[:SVD_modes]
+        max = self.max[:SVD_modes]        
+        if len(data.shape) == 2:
+            for i in range (int((data.size(1)-SVD_modes)/SVD_modes)):
+                min = pt.cat((min, self.min[:SVD_modes]))
+                max = pt.cat((max, self.max[:SVD_modes]))
+                i = i
+        self.min = min
+        self.max = max      
         data_norm = (data - self.min) / (self.max - self.min)
         return data_norm#2.0*data_norm - 1.0
 
     def rescale(self, data_norm):
         assert self.trained
-        #assert len(data_norm.shape) == 2
-        data = data_norm#(data_norm + 1.0) * 0.5
-        return data * (self.max - self.min) + self.min
+#        assert len(data_norm.shape) == 2
+        data = data_norm
+        min = self.min[:SVD_modes]
+        max = self.max[:SVD_modes]        
+        if len(data.shape) == 2:
+
+            for i in range (int((data.size(1)-SVD_modes)/SVD_modes)):
+                min = pt.cat((min, self.min[:SVD_modes]))
+                max = pt.cat((max, self.max[:SVD_modes]))
+                i = i
+        self.min = min
+        self.max = max
+        data = data_norm* (self.max - self.min) + self.min
+        return data#2.0*data_norm - 1.0
     
     def save(self):
         return self.min, self.max

@@ -97,6 +97,7 @@ for row in range(2):
 for ax in axarr[1, :]:
     ax.set_xlabel("predicted timesteps")
 plt.xlim(0, len(test_dataS))
+plt.ylim(-0.05,0.05)
 plt.legend()
 plt.savefig(f"{plt_save}PredictionR.png")
 
@@ -113,6 +114,7 @@ for row in range(2):
 for ax in axarr[1, :]:
     ax.set_xlabel("predicted timesteps")
 plt.xlim(0, len(test_dataS))
+plt.ylim(-0.05,0.05)
 plt.legend()
 plt.savefig(f"{plt_save}PredictionBW.png")
 

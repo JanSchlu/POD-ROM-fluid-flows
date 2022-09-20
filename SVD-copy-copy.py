@@ -1,12 +1,10 @@
 #!/usr/bin/env python3.8
 """
-code for SVD, uses data from flowtorch -> of_cylinder2d_binary
+code for SVD, uses data from flowtorch
 SVD for multiple datasets + Re number in dataset integrated
 """
 import torch as pt
-
 from flowtorch.data import FOAMDataloader, mask_box
-
 from flowtorch.analysis import SVD
 import sys
 from params import data_save

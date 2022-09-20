@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
 import torch as pt
+import pickle
 import sys
 sys.path.append('/home/jan/POD-ROM-fluid-flows/')
 from functions import *
-from params import model_params, p_steps, SVD_modes, data_save
+from params import model_params, data_save, ReInput
 
 train_loss = pt.zeros(10000)
 
@@ -21,20 +22,30 @@ print(model)
 #######################################################################################
 
 data = pt.load(f"{data_save}modeCoeffBinary.pt")
-data= data[:,:SVD_modes]
+#data = pt.load(f"{data_save}modeCoeff.pt")
+lenDataset = int(len(data)/3)
 
-train_data, y_train, test_data, y_test = dataManipulator(data, SVD_modes, p_steps, "backward")
+data1= data#[:lenDataset,:]
+data2= data[lenDataset:lenDataset*2,:]
+data3= data[lenDataset*2:,:]
+train_data1, y_train1, test_data1, y_test1 = dataManipulator(data1, 5e-3, "backward")
+train_data2, y_train2, test_data2, y_test2 = dataManipulator(data2, 5e-3, "backward")  
+train_data3, y_train3, test_data3, y_test3 = dataManipulator(data3, 5e-3, "backward")  
+
+train_data = train_data1#pt.cat((train_data1, train_data2, train_data3), 0)
+test_data = test_data1 #pt.cat((test_data1, test_data2, test_data3), 0)
+y_train = y_train1 #pt.cat((y_train1, y_train2, y_train3), 0)
+y_test = y_test1 #pt.cat((y_test1, y_test2, y_test2), 0)   
 
 InData = pt.cat((train_data, test_data), 0)
 InScaler = MinMaxScaler()
-InScaler.fit(InData)
+InScaler.fit(InData, ReInput)
 train_data_norm = InScaler.scale(train_data)
 test_data_norm = InScaler.scale(test_data)
-InScaler.fit(data)
 
 OutData = pt.cat((y_train, y_test), 0)
 OutScaler = MinMaxScaler()
-OutScaler.fit(OutData)
+OutScaler.fit(OutData, ReInput)
 y_train_norm = OutScaler.scale(y_train)
 y_test_norm = OutScaler.scale(y_test)
 

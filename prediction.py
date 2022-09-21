@@ -9,7 +9,6 @@ from params import data_save
 
 plt_save = "/home/jan/POD-ROM-fluid-flows/run/plot/"    
 
-import torch as pt
 import sys
 from functions import *
 from params import data_save, model_params

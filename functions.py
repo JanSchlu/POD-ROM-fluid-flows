@@ -1,6 +1,5 @@
 #!/usr/bin/env python3.8
 
-from re import S
 import torch as pt
 from os.path import isdir
 import pickle
@@ -52,6 +51,7 @@ class FirstNN(pt.nn.Module):
     def model_parameters(self):
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
 
+
 def optimize_model(model: pt.nn.Module, input_train: pt.Tensor, output_train: pt.Tensor, epochs: int=1000, lr: float=0.001, save_best: str=""): 
  
     criterion = pt.nn.MSELoss()
@@ -73,6 +73,7 @@ def optimize_model(model: pt.nn.Module, input_train: pt.Tensor, output_train: pt
                 best_train_loss = train_loss[-1]
     return train_loss
 
+
 def rearrange_data(data: pt.tensor, steps: int=0):
     """Rearrange data tensor to input tensor and output tensor.
 
@@ -85,10 +86,11 @@ def rearrange_data(data: pt.tensor, steps: int=0):
         output = pt.zeros(len(data)-steps-1)
     else:
         input = pt.zeros(data.size(dim=0)-steps-1, data.size(dim=1)+steps*data.size(dim=1))
-        output = pt.zeros(len(data)-steps-1, data.size(dim=1))
+        output = pt.zeros(len(data)-steps, data.size(dim=1))
     if steps == 0:
         input = data                                         
         output = data
+   
         return input, output                              
 
     for timestep in range (len(data)-steps-1):                             #loop over all timesteps
@@ -98,9 +100,10 @@ def rearrange_data(data: pt.tensor, steps: int=0):
             y = pt.cat((help_tensor,data[timestep + next_timestep+1]))    #add next timestep to tensor
             help_tensor = y
         input[timestep]= y
-        
+
     for i in range (len(output)):
-        output[i] = data[i + steps+1]
+        output[i] = data[i +steps]
+          
     return input, output
 
 
@@ -119,10 +122,11 @@ def recalculate_output(output_data, string, deltaT):
             output[i] = (3*output_data[i+1] - 4*output_data[i] + output_data[i-1])/(2*deltaT)
         return output
 
+
 def predictor_singlestep(model, data_normIn):
-    predict = pt.ones([len(data_normIn)-p_steps-2,SVD_modes])                                       
+    predict = pt.ones([len(data_normIn)-p_steps-2,SVD_modes])                                           # pred len(test_data)-1-p_steps
     for i in range (0, len(predict)):
-        predict[i] = model(data_normIn[i]).squeeze()               
+        predict[i] = model(data_normIn[i]).squeeze()               # model predict data[i+1]
     predict = predict.detach().numpy()
     return predict
 
@@ -134,15 +138,20 @@ def predictor_sequential(model, data_norm_x,scalerdic):
     OutScaler.refit(scalerdic["MinOutS"], scalerdic["MaxOutS"], ReInput)
     predicted_x = pt.ones([data_norm_x.shape[0],data_norm_x.shape[1]])    
     predicted_x[0] = data_norm_x[0]
-    #predicted_x[0][0] = 1
-    for i in range (0, len(predicted_x)-1):
-        predictor = InScaler.scale(OutScaler.rescale(model(predicted_x[i]).squeeze()))                          
-        if ReInput == True:
-            test = pt.tensor([1])
-            predictor = pt.cat((test,predictor),0)            
-            predicted_x[i+1] = pt.cat((predicted_x[i,n_inputs:],predictor))
-        predicted_x[i+1] = pt.cat((predicted_x[i,SVD_modes*p_steps:],predictor))            
-    predicted_x = predicted_x.detach().numpy()
+    if ReInput == True:
+        test = pt.tensor([1])
+        predicted_x[0][0] = 1
+        for i in range (0, len(predicted_x)-1):
+            predictor = OutScaler.rescale(model(predicted_x[i]).squeeze())
+            predictor_x = InScaler.scale(predictor)                           # nicht skaliert ->   x 
+            predictor_x = pt.cat((test,predictor_x),0)             #  cat x,x
+            predicted_x[i+1] = pt.cat((predicted_x[i,n_inputs:],predictor_x))   
+    else:
+        for i in range (0, len(predicted_x)-1):
+            predictor = OutScaler.rescale(model(predicted_x[i]).squeeze()) # -> nicht skaliert
+            predictor_x = InScaler.scale(predictor)                           #  ->   x 
+            predicted_x[i+1] = pt.cat((predicted_x[i,SVD_modes:],predictor_x))
+        predicted_x = predicted_x.detach().numpy()
     return predicted_x
 
 
@@ -153,22 +162,23 @@ def predictor_residual(model, data_norm_x,scalerdic):
     OutScaler.refit(scalerdic["MinOutR"], scalerdic["MaxOutR"], ReInput)          
     predicted_x = pt.ones([data_norm_x.shape[0],data_norm_x.shape[1]])   
     predicted_x[0] = data_norm_x[0]
-    #predicted_x[0][0] = 1
-    for i in range (0, len(predicted_x)-1):
-        predictor = OutScaler.rescale(model(predicted_x[i]).squeeze())                                    
-        if ReInput == True:
-            predictor = InScaler.rescale(predicted_x[i,1+n_inputs*p_steps:]) + predictor  
-            test = pt.tensor([1])
+    if ReInput == True:
+        test = pt.tensor([1])
+        predicted_x[0][0] = 1
+        for i in range (0, len(predicted_x)-1):
+            predictor = InScaler.rescale(predicted_x[i,1+n_inputs*p_steps:]) + OutScaler.rescale(model(predicted_x[i]).squeeze())  # nicht skalliert + nicht skaliert # geht nur in ReInput = true
             predictor = pt.cat((test,predictor),0)
-            predictor = InScaler.scale(predictor)                                      
-            predictor[0] = 1
-            predicted_x[i+1] = pt.cat((predicted_x[i,n_inputs:],predictor))             
-        else:       
-            predictor = InScaler.rescale(predicted_x[i,SVD_modes*p_steps:]) + predictor  
-            predictor = InScaler.scale(predictor)                                       
-            predicted_x[i+1] = pt.cat((predicted_x[i,SVD_modes:],predictor))          
+            predictor_x = InScaler.scale(predictor)                                       # x skaliert
+            predictor_x[0] = 1
+            predicted_x[i+1] = pt.cat((predicted_x[i,n_inputs:],predictor_x))             # cat x. x
+    else: 
+        for i in range (0, len(predicted_x)-1):
+            predictor = InScaler.rescale(predicted_x[i,SVD_modes*p_steps:]) + OutScaler.rescale(model(predicted_x[i]).squeeze())  # nicht skalliert + nicht skaliert # geht nur in ReInput = true
+            predictor_x = InScaler.scale(predictor)                                       # x skaliert
+            predicted_x[i+1] = pt.cat((predicted_x[i,SVD_modes:],predictor_x))             # cat x. x
     predicted_x = predicted_x.detach().numpy()
     return predicted_x
+
 
 def predictor_backward(model, data_norm_x, scalerdic):
     InScaler = MinMaxScaler()
@@ -177,27 +187,28 @@ def predictor_backward(model, data_norm_x, scalerdic):
     OutScaler.refit(scalerdic["MinOutBW"], scalerdic["MaxOutBW"], ReInput)                  
     predicted_x = pt.ones([data_norm_x.shape[0],data_norm_x.shape[1]])
     predicted_x[0] =data_norm_x[0]
-    #predicted_x[0][0] = 1    
     predicted_x[1] =data_norm_x[1]  
-    #predicted_x[1][0] = 1
-    y_BW = pt.ones([data_norm_x.shape[0],SVD_modes])
+    predicted_y = pt.ones([data_norm_x.shape[0],SVD_modes])
     data = InScaler.rescale(data_norm_x)
     if ReInput == True:
-        y_BW[0]=data[0,1+SVD_modes*p_steps:]  
-        y_BW[1]=data[1,1+SVD_modes*p_steps:]         
-    else:
-        y_BW[0]=data[0,SVD_modes*p_steps:]
-        y_BW[1]=data[1,SVD_modes*p_steps:]   
-  
-    for i in range(1,len(predicted_x)-1):
-        y = OutScaler.rescale(model(predicted_x[i]).squeeze())
-        y_BW[i+1]= 4/3*y_BW[i] -1/3*y_BW[i-1] + 2/3*y*5e-3          
-        if ReInput == True:
-            predictor = pt.cat((predicted_x[i,1+SVD_modes:],InScaler.scale(y_BW[i+1])))
+        predicted_x[0][0] = 1    
+        predicted_x[1][0] = 1
+        predicted_y[0]=data[0,1+SVD_modes*p_steps:]  
+        predicted_y[1]=data[1,1+SVD_modes*p_steps:]   
+        for i in range(1,len(predicted_x)-1):
+            predictor = OutScaler.rescale(model(predicted_x[i]).squeeze())
+            predicted_y[i+1]= 4/3*predicted_y[i] -1/3*predicted_y[i-1] + 2/3*predictor*5e-3         
+            predictor = pt.cat((predicted_x[i,1+SVD_modes:],InScaler.scale(predicted_y[i+1])))
             test = pt.tensor([1])
             predicted_x[i+1] = pt.cat((test,predictor),0)
-        else:        
-            predicted_x[i+1] = pt.cat((predicted_x[i,SVD_modes:],InScaler.scale(y_BW[i+1])))
+    else:
+        predicted_y[0]=data[0,SVD_modes*p_steps:]
+        predicted_y[1]=data[1,SVD_modes*p_steps:]   
+        for i in range(1,len(predicted_x)-1):
+            predictor = OutScaler.rescale(model(predicted_x[i]).squeeze())
+            predicted_y[i+1]= 4/3*predicted_y[i] -1/3*predicted_y[i-1] + 2/3*predictor*5e-3                 
+            predicted_x[i+1] = pt.cat((predicted_x[i,SVD_modes:],InScaler.scale(predicted_y[i+1])))
+
     predicted_x = predicted_x.detach().numpy()
     return predicted_x    
 
@@ -231,6 +242,7 @@ def dataManipulator(modeData,timestep, string):
         y_test=y_test[:,1:]
     return train_data, y_train, test_data, y_test
 
+
 class MinMaxScaler(object):
     """Class to scale/re-scale data to the range [-1, 1] and back.
     """
@@ -253,7 +265,6 @@ class MinMaxScaler(object):
 
     def scale(self, data):
         assert self.trained
-        #assert len(data.shape) == 2
         data_norm = data
         length = data_norm.shape[0]
         if len(data_norm.shape) == 2:
@@ -262,24 +273,32 @@ class MinMaxScaler(object):
         max = self.max        
         if self.ReIn == True:
             if  length == len(self.min)-1:
-                min = self.min[1:SVD_modes+1]
-                max = self.max[1:SVD_modes+1] 
+                min = self.min[1:]
+                max = self.max[1:]
             if length == len(self.min):
                 min = self.min
-                max = self.max     
-        if len(data.shape) == 2:
-            for i in range (1,int((data.shape[1]-SVD_modes)/SVD_modes)):
-                min = pt.cat((min, self.min[:SVD_modes]))                   ## falsch
-                max = pt.cat((max, self.max[:SVD_modes]))                   ##
-        if length == SVD_modes:
-            min = self.min[:SVD_modes]
-            max = self.max[:SVD_modes]                
+                max = self.max
+            if len(data.shape) == 2:
+                min = self.min[:SVD_modes]
+                max = self.max[:SVD_modes] 
+                for i in range (1,int((data.shape[1]-SVD_modes)/SVD_modes)):
+                    min = pt.cat((min, self.min[:SVD_modes]))                   ## falsch
+                    max = pt.cat((max, self.max[:SVD_modes]))                   ##
+        else:
+            if len(data.shape) == 2:
+                min = self.min[:SVD_modes]
+                max = self.max[:SVD_modes]                 
+                for i in range (int((data.shape[1]-SVD_modes)/SVD_modes)):                    
+                    min = pt.cat((min, self.min[:SVD_modes]))                   ## falsch
+                    max = pt.cat((max, self.max[:SVD_modes]))                   ##
+            if length == SVD_modes:
+                min = self.min[:SVD_modes]
+                max = self.max[:SVD_modes]               
         data_norm = (data - min) / (max - min)
         return data_norm#2.0*data_norm - 1.0
 
     def rescale(self, data_norm):
         assert self.trained
-#        assert len(data_norm.shape) == 2
         data = data_norm
         length = data_norm.shape[0]
         if len(data_norm.shape) == 2:
@@ -293,19 +312,28 @@ class MinMaxScaler(object):
             if length == len(self.min):
                 min = self.min
                 max = self.max   
-        if len(data.shape) == 2:
-            for i in range (1,int((data.shape[1]-SVD_modes)/SVD_modes)):
-                min = pt.cat((min, self.min[:SVD_modes]))                   ## falsch
-                max = pt.cat((max, self.max[:SVD_modes]))                   ##
-        if length == SVD_modes:
-            min = self.min[:SVD_modes]
-            max = self.max[:SVD_modes]         
-
+            if len(data.shape) == 2:
+                min = self.min[:SVD_modes]
+                max = self.max[:SVD_modes] 
+                for i in range (1,int((data.shape[1]-SVD_modes)/SVD_modes)):
+                    min = pt.cat((min, self.min[:SVD_modes]))                   ## falsch
+                    max = pt.cat((max, self.max[:SVD_modes]))                   ##
+        else:
+            if len(data.shape) == 2:
+                min = self.min[:SVD_modes]
+                max = self.max[:SVD_modes] 
+                for i in range (int((data.shape[1]-SVD_modes)/SVD_modes)):
+                    min = pt.cat((min, self.min[:SVD_modes]))                   ## falsch
+                    max = pt.cat((max, self.max[:SVD_modes]))                   ##
+            if length == SVD_modes:
+                min = self.min[:SVD_modes]
+                max = self.max[:SVD_modes]         
         data = data_norm* (max - min) + min
         return data#2.0*data_norm - 1.0
     
     def save(self):
         return self.min, self.max
+
 
 def dataloader(path):
     if os.path.isfile(path) == True:

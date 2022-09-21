@@ -1,7 +1,7 @@
 import torch as pt
 data_save = "/home/jan/POD-ROM-fluid-flows/run/data/"
 
-p_steps =   1       # Anzahl der mitberücksichtigen vorrangegagenen zeitschritte
+p_steps =   0       # Anzahl der mitberücksichtigen vorrangegagenen zeitschritte
 SVD_modes = 10      # first 19 singular values yield 99.12%
 ReInput = False#True      # Re Zahl am Anfang des EingabeTensors, ja oder nein
 

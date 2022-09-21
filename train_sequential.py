@@ -33,9 +33,10 @@ data1= data#[:lenDataset,:]
 data2= data[lenDataset:lenDataset*2,:]
 data3= data[lenDataset*2:,:]
 
-train_data1, y_train1, test_data1, y_test1 = dataManipulator(data1, 5e-3, "backward")
-train_data2, y_train2, test_data2, y_test2 = dataManipulator(data2, 5e-3, "backward")  
-train_data3, y_train3, test_data3, y_test3 = dataManipulator(data3, 5e-3, "backward")  
+
+train_data1, y_train1, test_data1, y_test1 = dataManipulator(data1, 5e-3, "sequential")
+train_data2, y_train2, test_data2, y_test2 = dataManipulator(data2, 5e-3, "sequential")  
+train_data3, y_train3, test_data3, y_test3 = dataManipulator(data3, 5e-3, "sequential")  
 
 train_data = train_data1#pt.cat((train_data1, train_data2, train_data3), 0)
 test_data = test_data1 #pt.cat((test_data1, test_data2, test_data3), 0)
@@ -49,8 +50,9 @@ InData = pt.cat((train_data, test_data), 0)
 InScaler = MinMaxScaler()
 InScaler.fit(InData, ReInput)
 train_data_norm = InScaler.scale(train_data)
-test_data_norm = InScaler.scale(test_data)
+test_data_norm = InScaler.scale(test_data)                              
 #InScaler.fit(data[:,:20], ReInput)
+
 
 OutData = pt.cat((y_train, y_test), 0)
 OutScaler = MinMaxScaler()
@@ -63,13 +65,13 @@ y_test_norm = OutScaler.scale(y_test)
 #train_data_norm = pt.cat((ReTensor,train_data_norm[:,1:]),1)
 
 scalerdict = dataloader(f"{data_save}scalerdict.pkl")
-scalerdict["MinInBW"], scalerdict["MaxInBW"] = InScaler.save()
-scalerdict["MinOutBW"], scalerdict["MaxOutBW"] = OutScaler.save()
+scalerdict["MinInS"], scalerdict["MaxInS"] = InScaler.save()
+scalerdict["MinOutS"], scalerdict["MaxOutS"] = OutScaler.save()
 with open(f"{data_save}scalerdict.pkl", "wb") as output:
     pickle.dump(scalerdict,output)
 
 pt.save(test_data_norm, f"{data_save}test_data_norm.pt")
-pt.save(y_test_norm, f"{data_save}y_test_norm_BW.pt")
+pt.save(y_test_norm, f"{data_save}y_test_norm_S.pt")
 
 #######################################################################################
 # training model
@@ -77,7 +79,7 @@ pt.save(y_test_norm, f"{data_save}y_test_norm_BW.pt")
 
 learnRate = 0.001
 epochs = 3000
-data_saveBW = "run/data/BW/"
 
-train_lossBW = optimize_model(model, train_data_norm, y_train_norm, epochs, lr=learnRate, save_best=data_saveBW)
-pt.save(train_lossBW, f"{data_save}train_lossBW.pt")
+data_saveS = "run/data/S/"
+train_loss = optimize_model(model, train_data_norm, y_train_norm, epochs, lr=learnRate, save_best=data_saveS)
+pt.save(train_loss, f"{data_save}train_loss.pt")

@@ -63,6 +63,7 @@ plt.ylim(bottom=10e-10)
 plt.legend()
 plt.savefig(f"{plt_save}loss.png")
 
+
 #######################################################################################
 # plot prediction
 #######################################################################################
@@ -79,15 +80,16 @@ if ReInput == 1:
     count = 1
 for row in range(2):
     for col in range(2):
-        axarr[row, col].plot(range(0 , len(y_testS)), y_testS[:,count],           'b',    lw=1, label=f"S test y")
+#        axarr[row, col].plot(range(0 , len(y_testS)), y_testS[:,count],           'b',    lw=1, label=f"S test y")
         axarr[row, col].plot(range(0 , len(test_dataS)), test_dataS[:,count],           'k',    lw=1, label=f"S test x")        
         axarr[row, col].plot(range(0 , len(predS_period)), predS_period[:,count],  'g', ls=':', lw=2, label=f"Vorhersage S")           
         axarr[row, col].grid()
+        axarr[row, col].set_title(f"mode coeff. {count + 1}")
         count += 1
 for ax in axarr[1, :]:
     ax.set_xlabel("predicted timesteps")
 plt.xlim(0, len(test_dataS))
-plt.ylim(-0.5,0.5)
+plt.ylim(-0.05,0.05)
 plt.legend()
 plt.savefig(f"{plt_save}PredictionS.png")
 
@@ -105,9 +107,10 @@ for row in range(2):
 for ax in axarr[1, :]:
     ax.set_xlabel("predicted timesteps")
 plt.xlim(0, len(test_dataS))
-plt.ylim(-0.5,0.5)
+plt.ylim(-0.05,0.05)
 plt.legend()
 plt.savefig(f"{plt_save}PredictionR.png")
+
 
 fig, axarr = plt.subplots(2, 2, sharex=True, sharey=True)
 count = 0
@@ -123,13 +126,19 @@ for row in range(2):
 for ax in axarr[1, :]:
     ax.set_xlabel("predicted timesteps")
 plt.xlim(0, len(test_dataS))
-plt.ylim(-0.5,0.5)
+plt.ylim(-0.05,0.05)
 plt.legend()
 plt.savefig(f"{plt_save}PredictionBW.png")
+
 
 #######################################################################################
 # error plot
 #######################################################################################
+
+
+#y_testS = y_test_norm_S[:-p_steps-1]
+#y_testR = y_test_norm_R[:-p_steps-1]
+#y_testBW = y_test_norm_BW[:-p_steps-1]
 
 if ReInput == True:
     test_dataS = test_dataS[:,1:]
@@ -152,9 +161,11 @@ meanErrbwSeq = pt.sum(errBWSeq,1)/SVD_modes
 errBWSeq = errBWSeq.detach().numpy()
 meanErrbwSeq = meanErrbwSeq.detach().numpy()
 
+
 #######################################################################################
 # plot mean error plot
 #######################################################################################
+
 
 fig, ax = plt.subplots()
 epochs = len(train_loss)                                      

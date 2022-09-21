@@ -25,6 +25,10 @@ data = pt.load(f"{data_save}modeCoeffBinary.pt")
 #data = pt.load(f"{data_save}modeCoeff.pt")
 lenDataset = int(len(data)/3)
 
+#ReTensor = pt.zeros([len(data),1])
+#ReTensor += 1
+#data = pt.cat((ReTensor,data),1)
+
 data1= data#[:lenDataset,:]
 data2= data[lenDataset:lenDataset*2,:]
 data3= data[lenDataset*2:,:]
@@ -38,17 +42,26 @@ test_data = test_data1 #pt.cat((test_data1, test_data2, test_data3), 0)
 y_train = y_train1 #pt.cat((y_train1, y_train2, y_train3), 0)
 y_test = y_test1 #pt.cat((y_test1, y_test2, y_test2), 0)   
 
+
+print(train_data1.shape,train_data.shape,test_data1.shape, test_data.shape)
+print(y_train1.shape, y_train.shape,y_test1.shape,y_test.shape)
+
 InData = pt.cat((train_data, test_data), 0)
 InScaler = MinMaxScaler()
 InScaler.fit(InData, ReInput)
 train_data_norm = InScaler.scale(train_data)
 test_data_norm = InScaler.scale(test_data)
+#InScaler.fit(data[:,:20], ReInput)
 
 OutData = pt.cat((y_train, y_test), 0)
 OutScaler = MinMaxScaler()
 OutScaler.fit(OutData, ReInput)
 y_train_norm = OutScaler.scale(y_train)
 y_test_norm = OutScaler.scale(y_test)
+
+#ReTensor = pt.zeros([len(train_data_norm),1])
+#ReTensor += 1
+#train_data_norm = pt.cat((ReTensor,train_data_norm[:,1:]),1)
 
 scalerdict = dataloader(f"{data_save}scalerdict.pkl")
 scalerdict["MinInR"], scalerdict["MaxInR"] = InScaler.save()

@@ -81,3 +81,4 @@ pt.save(modeCoeff,f"{data_save}modeCoeff.pt")
 
 # SVD fürt alle re gleichzeitg ausführen und dann trennen und Re in vektr einfügen
 #-> wegn rekonstirklion, besonders für interpolation
+print("alls klar")
